@@ -1,4 +1,12 @@
 Flask
-gunicorn 
-requests 
-validators 
+
+
+requests
+
+
+validators
+
+
+gunicorn
+
+
