@@ -10,8 +10,11 @@ from validators import url as validate_url
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
+# محاكاة متصفح متقدم جداً لتجاوز حماية المواقع
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
 }
 
 def check_ssl_status(hostname):
@@ -30,72 +33,68 @@ def perform_deep_analysis(target_url):
     points = 0
     
     try:
-        # فحص الرابط ومحتوى الصفحة
-        response = requests.get(target_url, headers=HEADERS, timeout=10, allow_redirects=True)
+        # محاولة جلب محتوى الصفحة مع تتبع التحويلات
+        session = requests.Session()
+        response = session.get(target_url, headers=HEADERS, timeout=12, allow_redirects=True)
         final_url = response.url
-        content = response.text  # هنا سنقوم بفحص الكود البرمجي للموقع
+        content = response.text 
         
+        # 1. تتبع المسار
         for resp in response.history:
             if resp.url not in redirect_path:
                 redirect_path.append(resp.url)
         if final_url not in redirect_path:
             redirect_path.append(final_url)
 
-        # 1. فحص تشفير الموقع
-        if not final_url.startswith('https'):
-            points += 45
-            violated_rules.append({"name": "اتصال غير مشفر", "risk_description": "الموقع لا يستخدم HTTPS.", "points_added": 45})
-        else:
-            if not check_ssl_status(urlparse(final_url).netloc):
-                points += 35
-                violated_rules.append({"name": "شهادة SSL غير موثوقة", "risk_description": "شهادة الأمان قد تكون مزيفة.", "points_added": 35})
-
-        # 2. فحص محتوى الصفحة (التحديث الجديد لكشف سكريبتات الكاميرا)
+        # 2. فحص كلمات "سحب الكاميرا" المشفرة والعادية (Behavioral Detection)
+        # أضفت هنا كلمات يبحث عنها الهاكرز لإخفاء كود الكاميرا
+        camera_patterns = [
+            r'getUserMedia', r'mediaDevices', r'video', r'camera', 
+            r'navigator\.webkitGetUserMedia', r'navigator\.mozGetUserMedia',
+            r'stream', r'track', r'snapshot', r'webcam', r'capture'
+        ]
         
-        # كشف طلب الوصول للكاميرا أو الميكروفون
-        if re.search(r'getUserMedia|enumerateDevices|mediaDevices', content):
-            points += 70
+        found_camera_triggers = [p for p in camera_patterns if re.search(p, content, re.I)]
+        
+        if found_camera_triggers:
+            points += 85  # نقطة خطر عالية جداً
             violated_rules.append({
-                "name": "محاولة اختراق الخصوصية", 
-                "risk_description": "تم رصد كود برمجي يحاول الوصول للكاميرا أو الميكروفون الخاص بك فور الدخول.", 
-                "points_added": 70
+                "name": "رادار كشف الكاميرا", 
+                "risk_description": f"تحذير! تم رصد محاولة وصول للوسائط (كاميرا/مايك) داخل كود الصفحة. الموقع يحاول استخدام: {', '.join(found_camera_triggers[:2])}", 
+                "points_added": 85
             })
 
-        # كشف محاولة سحب الصور أو البيانات تلقائياً
-        if re.search(r'canvas\.toDataURL|upload|post.*\.png|post.*\.jpg', content, re.I):
-            points += 50
+        # 3. فحص "إرسال البيانات" (Exfiltration Detection)
+        # المواقع التي تصور الضحية يجب أن ترسل الصورة للسيرفر، سنكشف كود الإرسال
+        upload_patterns = [r'ajax', r'fetch', r'XMLHttpRequest', r'POST', r'upload', r'base64']
+        if found_camera_triggers and any(re.search(p, content, re.I) for p in upload_patterns):
+            points += 15 # زيادة الخطر إذا وجدنا كود إرسال مع كود كاميرا
             violated_rules.append({
-                "name": "اشتباه في سحب بيانات بصري", 
-                "risk_description": "الموقع يحتوي على تعليمات برمجية لإرسال صور أو لقطات من جهازك للسيرفر.", 
-                "points_added": 50
+                "name": "نشاط سحب بيانات بصري", 
+                "risk_description": "تم رصد كود يقوم بالتقاط صور وإرسالها إلى خادم خارجي.", 
+                "points_added": 15
             })
 
-        # كشف طلبات إدخال كلمات المرور في مواقع غير معروفة
-        if re.search(r'type="password"', content, re.I):
+        # 4. فحص الروابط المشبوهة (Metadata)
+        if not final_url.startswith('https'):
             points += 40
-            violated_rules.append({"name": "طلب بيانات حساسة", "risk_description": "تم رصد نموذج لإدخال كلمة مرور.", "points_added": 40})
+            violated_rules.append({"name": "رابط غير مشفر", "risk_description": "الموقع لا يستخدم تشفير HTTPS.", "points_added": 40})
+        
+        # كشف الروابط الطويلة جداً أو الغريبة
+        if len(final_url) > 100 or final_url.count('.') > 3:
+            points += 20
+            violated_rules.append({"name": "هيكل رابط مريب", "risk_description": "الرابط طويل جداً أو يحتوي على نطاقات فرعية مريبة.", "points_added": 20})
 
     except Exception:
-        points += 20
-        violated_rules.append({"name": "فشل الوصول للمحتوى", "risk_description": "الموقع يحظر أدوات التحليل، مما يثير الريبة.", "points_added": 20})
+        points += 30
+        violated_rules.append({"name": "حماية ضد الفحص", "risk_description": "الموقع يستخدم تقنيات لمنع الرادار من قراءة محتواه.", "points_added": 30})
         final_url = target_url
-
-    # 3. فحص الرابط نفسه (Regex)
-    static_rules = [
-        (r'@', 50, "رمز تضليل @"),
-        (r'\d{1,3}\.\d{1,3}\.\d{1,3}', 60, "عنوان IP مباشر"),
-        (r'(login|verify|bank|gift|update)', 30, "كلمات هندسة اجتماعية")
-    ]
-    for pattern, pts, name in static_rules:
-        if re.search(pattern, final_url, re.I):
-            points += pts
-            violated_rules.append({"name": name, "risk_description": "نمط الرابط مريب وغالباً ما يُستخدم في التصيد.", "points_added": pts})
 
     risk = "Critical" if points >= 80 else "High" if points >= 45 else "Medium" if points >= 20 else "Low"
 
     return {
         "risk_score": risk,
-        "suspicious_points": points,
+        "suspicious_points": min(points, 100), # لا يتعدى 100
         "violated_rules": violated_rules,
         "link_final": final_url,
         "redirect_path": redirect_path,
@@ -103,8 +102,7 @@ def perform_deep_analysis(target_url):
     }
 
 @app.route('/')
-def home():
-    return render_template('index.html')
+def home(): return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
