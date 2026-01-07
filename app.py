@@ -10,7 +10,7 @@ from urllib.parse import urlparse, urljoin
 from validators import url as validate_url
 from datetime import datetime
 
-# إعداد التطبيق
+# إعداد التطبيق - تأكد من وجود مجلدات static و templates
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 # إعدادات متصفح احترافية لتجاوز جدران الحماية (Stealth Mode)
@@ -26,7 +26,6 @@ def get_domain_age(domain):
     try:
         if not domain or '.' not in domain or len(domain) < 3:
             return None
-        # جلب بيانات التسجيل عالمياً
         res = requests.get(f"https://rdap.org/domain/{domain}", timeout=5)
         if res.status_code == 200:
             data = res.json()
@@ -43,7 +42,6 @@ def get_domain_age(domain):
 def deobfuscate_hidden_logic(content):
     """فك تشفير النصوص المخفية (Base64) لكشف الأكواد المضللة"""
     extracted_logic = ""
-    # البحث عن نصوص Base64 المحتملة في الكود
     potential_b64 = re.findall(r'["\']([A-Za-z0-9+/]{35,})={0,2}["\']', content)
     for b in potential_b64:
         try:
@@ -57,7 +55,7 @@ def fetch_and_scan_js(html, base_url):
     """مطاردة ملفات الـ JavaScript الخارجية وفحص محتواها"""
     scripts = re.findall(r'<script src=["\'](.*?)["\']', html, re.I)
     js_payload = ""
-    for s in scripts[:4]: # فحص أول 4 ملفات لضمان التغطية والسرعة
+    for s in scripts[:4]:
         try:
             full_url = urljoin(base_url, s)
             r = requests.get(full_url, headers=HEADERS, timeout=4)
@@ -91,10 +89,10 @@ def perform_ultimate_analysis(target_url):
         if age is not None:
             if age < 31:
                 risk_points += 55
-                violated_rules.append({"name": "نطاق حديث جداً (خطر عالي)", "risk_description": f"تم إنشاء هذا الموقع منذ {age} يوم فقط. المواقع الجديدة غالباً ما تُستخدم في حملات التصيد السريع.", "points_added": 55})
+                violated_rules.append({"name": "نطاق حديث جداً (خطر عالي)", "risk_description": f"تم إنشاء هذا الموقع منذ {age} يوم فقط. المواقع الجديدة غالباً ما تُستخدم في حملات التصيد السريع."})
             elif age < 180:
                 risk_points += 25
-                violated_rules.append({"name": "نطاق غير مستقر", "risk_description": "عمر الموقع أقل من 6 أشهر، مما يجعله تحت مجهر المراجعة الأمنية.", "points_added": 25})
+                violated_rules.append({"name": "نطاق غير مستقر", "risk_description": "عمر الموقع أقل من 6 أشهر، مما يجعله تحت مجهر المراجعة الأمنية."})
 
         # 2. كشف الأذونات والخصوصية (Permissions Tracker)
         threat_patterns = {
@@ -110,14 +108,13 @@ def perform_ultimate_analysis(target_url):
                 risk_points += weight
                 violated_rules.append({
                     "name": f"نشاط مشبوه: {category}", 
-                    "risk_description": f"تم رصد محاولة برمجية للوصول إلى ({category}) أو سحب بيانات حساسة فور الدخول.", 
-                    "points_added": weight
+                    "risk_description": f"تم رصد محاولة برمجية للوصول إلى ({category}) أو سحب بيانات حساسة فور الدخول."
                 })
 
         # 3. تحليل الروابط والتحويلات
         if len(response.history) > 2:
             risk_points += 30
-            violated_rules.append({"name": "سلسلة تحويلات مريبة", "risk_description": f"الرابط قام بالتحويل {len(response.history)} مرات لإخفاء الوجهة النهائية.", "points_added": 30})
+            violated_rules.append({"name": "سلسلة تحويلات مريبة", "risk_description": f"الرابط قام بالتحويل {len(response.history)} مرات لإخفاء الوجهة النهائية."})
         
         for r in response.history:
             if r.url not in redirect_path: redirect_path.append(r.url)
@@ -128,15 +125,15 @@ def perform_ultimate_analysis(target_url):
         for b in brands:
             if b in domain.lower() and domain.lower() != f"{b}.com":
                 risk_points += 45
-                violated_rules.append({"name": "اشتباه انتحال علامة تجارية", "risk_description": f"الموقع يستخدم اسم '{b}' في الرابط لخداع المستخدمين بأنه الموقع الرسمي.", "points_added": 45})
+                violated_rules.append({"name": "اشتباه انتحال علامة تجارية", "risk_description": f"الموقع يستخدم اسم '{b}' في الرابط لخداع المستخدمين بأنه الموقع الرسمي."})
 
         if not final_url.startswith('https'):
             risk_points += 50
-            violated_rules.append({"name": "اتصال غير مشفر", "risk_description": "الموقع لا يستخدم بروتوكول HTTPS، مما يعرض خصوصيتك للخطر.", "points_added": 50})
+            violated_rules.append({"name": "اتصال غير مشفر", "risk_description": "الموقع لا يستخدم بروتوكول HTTPS، مما يعرض خصوصيتك للخطر."})
 
     except Exception:
         risk_points += 35
-        violated_rules.append({"name": "نظام حماية ضد الفحص", "risk_description": "الموقع يحظر أدوات الرادار، وهو مؤشر خطر عالي يُستخدم عادةً لإخفاء البرمجيات الضارة.", "points_added": 35})
+        violated_rules.append({"name": "نظام حماية ضد الفحص", "risk_description": "الموقع يحظر أدوات الرادار، وهو مؤشر خطر عالي يُستخدم عادةً لإخفاء البرمجيات الضارة."})
         final_url = target_url
 
     # النتيجة النهائية وتصنيف الخطر
@@ -152,7 +149,6 @@ def perform_ultimate_analysis(target_url):
         "execution_time": round(time.time() - start_time, 2)
     }
 
-# مسارات التطبيق (Routes)
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -173,4 +169,3 @@ def sitemap(): return send_from_directory(app.static_folder, 'sitemap.xml')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
