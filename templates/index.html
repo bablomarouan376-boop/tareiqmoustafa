@@ -4,16 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     
-    <!-- إثبات ملكية جوجل -->
     <meta name="google-site-verification" content="uDTeyJLiPOO2rCMKm7-iONhBtRgRF7qv1NP9jhCRK2A" />
 
-    <!-- تحسين محركات البحث SEO -->
     <title>SecuCode Pro | الرادار الأمني المتقدم - طارق مصطفى</title>
-    <meta name="description" content="SecuCode Pro هو نظام رادار متطور لفحص الروابط وكشف التهديدات السيبرانية وتتبع التحويلات، مطور بواسطة طارق مصطفى.">
-    <meta name="keywords" content="SecuCode Pro, طارق مصطفى, Tarek Mostafa, فحص روابط, أمن سيبراني, كشف التصيد, Secu-Code-Pro">
+    <meta name="description" content="SecuCode Pro هو نظام رادار متطور لفحص الروابط وكشف التهديدات السيبرانية وتتبع التحويلات، مطور بواسطة المهندس طارق مصطفى.">
+    <meta name="keywords" content="SecuCode Pro, طارق مصطفى, Tarek Mostafa, فحص روابط, أمن سيبراني, كشف التصيد, Secu-Code-Pro, URL Scanner, حماية المواقع">
     <link rel="canonical" href="https://secu-code-pro.vercel.app/" />
+    <meta name="author" content="Tarek Mostafa">
 
-    <!-- المكتبات الخارجية -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://secu-code-pro.vercel.app/">
+    <meta property="og:title" content="SecuCode Pro | الرادار الأمني المتقدم">
+    <meta property="og:description" content="افحص الروابط المشبوهة مجاناً مع نظام الرادار الذكي SecuCode Pro وكشف التهديدات البرمجية.">
+    <meta property="og:image" content="https://secu-code-pro.vercel.app/static/og-image.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SecuCode Pro | Security Engine">
+    <meta name="twitter:description" content="نظام متطور لكشف التهديدات السيبرانية وتتبع التحويلات مطور بواسطة طارق مصطفى.">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SecuCode Pro",
+      "operatingSystem": "All",
+      "applicationCategory": "SecurityApplication",
+      "url": "https://secu-code-pro.vercel.app/",
+      "author": {
+        "@type": "Person",
+        "name": "Tarek Mostafa"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EGP"
+      }
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -33,7 +61,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* منع مشاكل العرض على المتصفحات المختلفة */
         .cyber-card { 
             background: var(--card-bg); 
             backdrop-filter: blur(12px); 
@@ -41,24 +68,20 @@
             transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
-        /* تحسين استجابة الموبايل للمس */
         input, button {
             min-height: 56px !important;
             touch-action: manipulation;
         }
 
-        /* تأثيرات بصرية احترافية */
         .glow-text {
             text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
         }
 
-        /* تصنيفات المخاطر واضحة لجوجل والمستخدم */
         .risk-Critical { border-right: 6px solid #ef4444; background: linear-gradient(to left, rgba(239, 68, 68, 0.05), transparent); }
         .risk-High { border-right: 6px solid #f97316; background: linear-gradient(to left, rgba(249, 115, 22, 0.05), transparent); }
         .risk-Medium { border-right: 6px solid #eab308; background: linear-gradient(to left, rgba(234, 179, 8, 0.05), transparent); }
         .risk-Low { border-right: 6px solid #22c55e; background: linear-gradient(to left, rgba(34, 197, 94, 0.05), transparent); }
 
-        /* تعديلات الموبايل الإضافية */
         @media (max-width: 640px) {
             h1 { font-size: 3.5rem !important; }
             .container { padding: 1rem; }
@@ -67,7 +90,6 @@
 </head>
 <body class="min-h-screen flex flex-col items-center overflow-x-hidden">
 
-    <!-- خلفية تفاعلية بسيطة -->
     <div class="fixed inset-0 -z-10 opacity-20 pointer-events-none">
         <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[120px]"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-900 rounded-full blur-[120px]"></div>
@@ -83,12 +105,11 @@
         </h1>
         <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             نظام رادار ذكي لتحليل الروابط المشبوهة. <br class="hidden md:block">
-            بإشراف وتطوير المهندس: <span class="text-blue-400 font-bold">طارق مصطفى</span>.
+            بإشراف وتطوير : <span class="text-blue-400 font-bold">طارق مصطفى</span>.
         </p>
     </header>
 
     <main class="w-full max-w-3xl px-4 flex-grow">
-        <!-- منطقة الإدخال -->
         <div class="cyber-card rounded-[2rem] p-6 md:p-10 mb-10 shadow-2xl">
             <div class="mb-6">
                 <label for="urlInput" class="block text-sm font-bold text-slate-500 mb-3 mr-2 uppercase tracking-widest">رابط الموقع المراد فحصه</label>
@@ -104,7 +125,6 @@
             </button>
         </div>
 
-        <!-- منطقة النتائج -->
         <div id="resultArea" class="hidden space-y-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-500">
             <div id="statusCard" class="cyber-card rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-right">
@@ -117,20 +137,21 @@
                     <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">نقاط الخطورة</p>
                 </div>
             </div>
-
-            <!-- قائمة الانتهاكات -->
             <div id="violationsList" class="grid gap-4"></div>
         </div>
     </main>
 
-    <footer class="w-full py-10 border-t border-slate-900 mt-auto text-center">
+    <footer class="w-full py-10 border-t border-slate-900 mt-auto text-center px-4">
+        <div class="max-w-2xl mx-auto mb-6 text-slate-500 text-sm">
+            <h3 class="font-bold text-slate-400 mb-2">حول SecuCode Pro</h3>
+            <p>أداة أمنية متقدمة تهدف لرفع الوعي السيبراني وحماية المستخدمين من هجمات التصيد والبرمجيات الخبيثة عبر تحليل معمق للروابط.</p>
+        </div>
         <p class="text-slate-600 text-[11px] font-bold uppercase tracking-[0.3em]">
-            SecuCode Pro &copy; 2025 | Developed by Tarek Mostafa
+            SecuCode Pro &copy; 2026 | Developed by Tarek Mostafa
         </p>
     </footer>
 
     <script>
-        // تفعيل الأيقونات
         lucide.createIcons();
 
         async function startScan() {
@@ -141,7 +162,6 @@
             let link = linkInput.value.trim();
             if(!link) return;
             
-            // التأكد من وجود البروتوكول
             if (!/^https?:\/\//i.test(link)) {
                 link = 'https://' + link;
             }
@@ -149,7 +169,6 @@
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
             btn.innerHTML = `<span class="animate-pulse">جاري تحليل البيانات...</span>`;
-            
             resultArea.classList.add('hidden');
 
             try {
@@ -178,13 +197,10 @@
             const violationsList = document.getElementById('violationsList');
 
             resultArea.classList.remove('hidden');
-            
-            // تحديث البطاقة الرئيسية
             statusCard.className = `cyber-card rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 risk-${data.risk_score}`;
             riskLabel.textContent = translateRisk(data.risk_score);
             scoreText.textContent = data.suspicious_points;
 
-            // تحديث قائمة الانتهاكات
             violationsList.innerHTML = '';
             
             if(data.violated_rules.length === 0) {
@@ -212,11 +228,7 @@
                     `;
                 });
             }
-            
-            // إعادة تفعيل الأيقونات للنتائج الجديدة
             lucide.createIcons();
-            
-            // التمرير التلقائي للنتائج في الموبايل
             resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -232,4 +244,3 @@
     </script>
 </body>
 </html>
-
