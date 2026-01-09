@@ -90,40 +90,65 @@
         }
 
         function showResults(data) {
+            const results = document.getElementById('results');
             results.classList.remove('hidden');
             const mainCard = document.getElementById('mainCard');
             const riskStatus = document.getElementById('riskStatus');
             const riskScore = document.getElementById('riskScore');
             
-            // تحديث الألوان
+            // تحديث الألوان بناءً على مفاتيح الكود المستقر (Low, Medium, High, Critical)
             const colors = {
                 'Low': '#22c55e', 'Medium': '#eab308', 'High': '#f97316', 'Critical': '#ef4444', 'Unknown': '#64748b'
             };
-            const color = colors[data.risk_score];
+            const color = colors[data.risk_score] || '#3b82f6';
+            
             mainCard.style.borderColor = color;
             riskStatus.style.color = color;
-            riskStatus.textContent = data.risk_score === 'Low' ? 'آمن وموثوق' : (data.risk_score === 'Critical' ? 'خطر حرج' : data.risk_score);
-            riskScore.textContent = data.suspicious_points;
+            
+            // ترجمة الحالة للعربية
+            const statusMap = {
+                'Low': 'آمن وموثوق',
+                'Medium': 'اشتباه متوسط',
+                'High': 'خطر مرتفع',
+                'Critical': 'تهديد حرج',
+                'Unknown': 'غير معروف'
+            };
+            
+            riskStatus.textContent = statusMap[data.risk_score] || data.risk_score;
+            riskScore.textContent = data.points; // استخدام مفتاح points من كود Python
 
-            // خريطة التحويلات
+            // عرض مسار التحويلات
             const pathDiv = document.getElementById('redirectPath');
             pathDiv.innerHTML = data.redirects.map((url, i) => `
                 <div class="node-line flex items-center gap-4 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
                     <span class="text-blue-500 font-bold">#${i+1}</span>
-                    <span class="text-xs truncate text-slate-400">${url}</span>
+                    <span class="text-xs truncate text-slate-400 flex-1" title="${url}">${url}</span>
                 </div>
             `).join('');
 
-            // الانتهاكات
+            // عرض قائمة الانتهاكات
             const vDiv = document.getElementById('violations');
-            vDiv.innerHTML = data.violations.length ? data.violations.map(v => `
-                <div class="glass p-5 rounded-2xl border-r-4 border-red-500 animate-pulse">
-                    <h4 class="font-bold text-red-400">${v.name}</h4>
-                    <p class="text-sm text-slate-400">${v.desc}</p>
-                </div>
-            `).join('') : `<div class="p-6 text-center text-green-500 font-bold bg-green-500/5 rounded-2xl border border-green-500/20">لم يتم رصد أي سلوك مريب في هذا الرابط</div>`;
+            if (data.violations && data.violations.length > 0) {
+                vDiv.innerHTML = data.violations.map(v => `
+                    <div class="glass p-5 rounded-2xl border-r-4 border-red-500">
+                        <h4 class="font-bold text-red-400">${v.name}</h4>
+                        <p class="text-sm text-slate-400">${v.desc}</p>
+                    </div>
+                `).join('');
+            } else {
+                vDiv.innerHTML = `
+                    <div class="p-6 text-center text-green-500 font-bold bg-green-500/5 rounded-2xl border border-green-500/20">
+                        لم يتم رصد أي سلوك مريب في هذا الرابط
+                    </div>
+                `;
+            }
 
             lucide.createIcons();
+            
+            // تمرير تلقائي للنتائج
+            setTimeout(() => {
+                results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
     </script>
 </body>
