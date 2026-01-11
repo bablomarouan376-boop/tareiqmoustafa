@@ -1,130 +1,128 @@
-import time
-import re
-import requests
-from flask import Flask, render_template, send_from_directory, request, jsonify
+import os, re, requests, time, base64
+from flask import Flask, request, jsonify, render_template, send_from_directory
+from urllib.parse import urlparse, urljoin
+from datetime import datetime
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# --- 1. خدمات الأرشفة والملفات التعريفية (SEO, PWA, Google) ---
+# إعدادات التصفح المتخفي (Stealth)
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "ar,en;q=0.9",
+    "Referer": "https://www.google.com/"
+}
 
-@app.route('/manifest.json')
-def manifest():
-    # لضمان ظهور أيقونة التطبيق SecuCode Pro
-    return send_from_directory(app.static_folder, 'manifest.json')
+# قائمة المواقع الموثوقة (لتجنب الأخطاء المنطقية)
+WHITELIST = [
+    'google.com', 'facebook.com', 'microsoft.com', 'apple.com', 
+    'github.com', 'twitter.com', 'x.com', 'linkedin.com', 
+    'gmail.com', 'youtube.com', 'vercel.app', 'netlify.app'
+]
 
-@app.route('/sitemap.xml')
-def sitemap():
-    # لضمان أرشفة جوجل للموقع يومياً
-    return send_from_directory(app.static_folder, 'sitemap.xml')
-
-@app.route('/robots.txt')
-def robots():
-    # لتوجيه محركات البحث ومنع العناكب من ملفات النظام
-    return send_from_directory(app.static_folder, 'robots.txt')
-
-@app.route('/googlecc048452b42b8f02.html')
-def google_verify():
-    # إثبات ملكية جوجل Search Console الخاص بك
-    return "google-site-verification: googlecc048452b42b8f02.html"
-
-
-# --- 2. محرك الفحص الأمني المطور لـ SecuCode Pro ---
-
-def deep_analyze(url):
-    start_time = time.time()
-    # الهيكل المتوافق مع تصميم واجهة المستخدم الخاصة بك
-    data = {
-        "points": 0,
-        "risk_score": "Low",
-        "redirects": [url],
-        "violations": [],
-        "analysis_time": 0
-    }
-    
+def get_domain_age(domain):
+    """جلب عمر النطاق بطريقة سريعة"""
     try:
-        # استخدام هيدرز احترافي لتجنب حظر السيرفرات أثناء الفحص
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SecuCodePro/3.5 (Tarek Mostafa Security Research)'
+        if any(d in domain for d in WHITELIST): return 9999
+        res = requests.get(f"https://rdap.org/domain/{domain}", timeout=4)
+        if res.status_code == 200:
+            events = res.json().get('events', [])
+            for event in events:
+                if event.get('eventAction') == 'registration':
+                    reg_date = datetime.strptime(event.get('eventDate')[:10], "%Y-%m-%d")
+                    return (datetime.now() - reg_date).days
+    except: pass
+    return None
+
+def analyze_logic(target_url):
+    start_time = time.time()
+    violated_rules = []
+    risk_points = 0
+    domain = urlparse(target_url).netloc.lower()
+
+    # 1. فحص القائمة البيضاء (سرعة فورية)
+    if any(d in domain for d in WHITELIST):
+        return {
+            "risk_score": "Low", "points": 0, "violations": [],
+            "final_url": target_url, "redirects": [target_url], "time": 0.01
         }
-        
-        # تتبع التحويلات (Redirect Tracker) وكشف الرابط النهائي
-        response = requests.get(url, timeout=10, headers=headers, allow_redirects=True)
-        
-        # تسجيل مسار التحويل بالكامل
-        data["redirects"] = [r.url for r in response.history] + [response.url]
+
+    try:
+        # 2. تتبع التحويلات وجلب المحتوى
+        session = requests.Session()
+        response = session.get(target_url, headers=HEADERS, timeout=10, allow_redirects=True)
+        final_url = response.url
         content = response.text
         
-        # الفحص الأول: تشفير الاتصال SSL
-        if not response.url.startswith('https'):
-            data["points"] += 45
-            data["violations"].append({
-                "name": "اتصال غير مشفر (HTTP)", 
-                "desc": "هذا الموقع لا يستخدم بروتوكول HTTPS، مما يجعل البيانات المتبادلة عرضة للتنصت."
-            })
+        # 3. تحليل عمر النطاق (الأمان الزمني)
+        age = get_domain_age(domain)
+        if age and age < 60:
+            risk_points += 55
+            violated_rules.append({"name": "نطاق حديث (خطر)", "desc": f"الموقع أنشئ منذ {age} يوم. معظم مواقع الاحتيال لا تعيش طويلاً."})
 
-        # الفحص الثاني: كشف التشفير المريب (Base64)
-        # البحث عن نصوص مشفرة طويلة جداً غالباً ما تخفي برمجيات خبيثة
-        if len(re.findall(r"([A-Za-z0-9+/]{60,}=*)", content)) > 0:
-            data["points"] += 35
-            data["violations"].append({
-                "name": "تشفير Base64 مشبوه", 
-                "desc": "تم رصد محاولات إخفاء أكواد برمجية في بنية الموقع."
-            })
+        # 4. كشف انتحال الهوية (Brand Impersonation)
+        brands = ['paypal', 'binance', 'amazon', 'netflix', 'instagram', 'wallet']
+        for b in brands:
+            if b in domain and domain != f"{b}.com":
+                risk_points += 50
+                violated_rules.append({"name": "اشتباه انتحال ماركة", "desc": f"استخدام اسم '{b}' في رابط غير رسمي هو سلوك تصيد مؤكد."})
 
-        # الفحص الثالث: تحليل أنماط التصيد الاحتيالي (Phishing)
-        phish_keywords = ['login', 'verify', 'password', 'bank', 'signin', 'secure', 'account']
-        if any(word in content.lower() for word in phish_keywords):
-            data["points"] += 20
-            data["violations"].append({
-                "name": "اشتباه تصيد (Phishing)", 
-                "desc": "الصفحة تحتوي على حقول تطلب بيانات حساسة في سياق يثير الريبة."
-            })
+        # 5. التحليل السلوكي للأكواد (Behavioral Analysis)
+        threats = {
+            r'getUserMedia|camera|microphone': ("طلب صلاحيات حساسة", 40),
+            r'password|credit_card|cvv|secret': ("طلب بيانات خصوصية", 35),
+            r'[A-Za-z0-9+/]{400,}=*': ("تشفير Base64 كثيف", 30),
+            r'atob\(|eval\(|unescape\(': ("محاولة إخفاء أكواد برمجية", 25)
+        }
 
-    except Exception as e:
-        # في حال فشل الوصول للموقع (محمي أو معطل)
-        data["risk_score"] = "Medium"
-        data["violations"].append({
-            "name": "فحص محدود", 
-            "desc": "الموقع يمنع أدوات الفحص التلقائي أو غير متاح حالياً، يرجى الحذر."
-        })
+        for pattern, (name, weight) in threats.items():
+            if re.search(pattern, content, re.I):
+                risk_points += weight
+                violated_rules.append({"name": name, "desc": "تم رصد سلوك برمجي يحاول الوصول لبياناتك أو إخفاء نشاطه."})
 
-    # حساب تصنيف الخطورة النهائي
-    p = data["points"]
-    if p >= 80:
-        data["risk_score"] = "Critical"
-    elif p >= 50:
-        data["risk_score"] = "High"
-    elif p >= 25:
-        data["risk_score"] = "Medium"
-    else:
-        data["risk_score"] = "Low"
-    
-    data["analysis_time"] = round(time.time() - start_time, 2)
-    return data
+        # 6. أمان التشفير
+        if not final_url.startswith('https'):
+            risk_points += 45
+            violated_rules.append({"name": "اتصال غير آمن", "desc": "الموقع يفتقر لتشفير SSL، مما يجعل بياناتك مكشوفة."})
 
+    except Exception:
+        risk_points = 40
+        violated_rules.append({"name": "جدار حماية ضد الفحص", "desc": "الموقع يحظر أدوات التحليل، مما يرفع احتمالية وجود محتوى ضار مخفي."})
+        final_url = target_url
 
-# --- 3. المسارات الرئيسية (Routes) ---
+    # النتيجة النهائية
+    p = min(risk_points, 100)
+    label = "Critical" if p >= 80 else "High" if p >= 55 else "Medium" if p >= 30 else "Low"
+
+    return {
+        "risk_score": label, "points": p, "violations": violated_rules,
+        "final_url": final_url, 
+        "redirects": [r.url for r in getattr(response, 'history', [])] + [final_url],
+        "time": round(time.time() - start_time, 2)
+    }
+
+# --- المسارات (Routes) ---
 
 @app.route('/')
-def index():
-    # عرض الواجهة الرئيسية المصممة بواسطة طارق مصطفى
-    return render_template('index.html')
+def index(): return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    # استقبال طلبات الفحص من الواجهة
-    req = request.json or {}
-    url = req.get('link', '').strip()
-    
-    if not url:
-        return jsonify({"error": "يرجى إدخال رابط صالح"}), 400
-    
-    # التأكد من وجود البروتوكول قبل الفحص
-    if not url.startswith('http'):
-        url = 'https://' + url
-        
-    return jsonify(deep_analyze(url))
+    url = request.json.get('link', '').strip()
+    if not url: return jsonify({"error": "أدخل رابطاً"}), 400
+    if not url.startswith('http'): url = 'https://' + url
+    return jsonify(analyze_logic(url))
+
+@app.route('/robots.txt')
+def robots(): return send_from_directory(app.static_folder, 'robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap(): return send_from_directory(app.static_folder, 'sitemap.xml')
+
+@app.route('/manifest.json')
+def manifest(): return send_from_directory(app.static_folder, 'manifest.json')
+
+@app.route('/googlecc048452b42b8f02.html')
+def google_verify(): return "google-site-verification: googlecc048452b42b8f02.html"
 
 if __name__ == '__main__':
-    # تشغيل السيرفر في وضع التطوير
     app.run(debug=True)
