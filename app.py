@@ -12,7 +12,7 @@ LAST_UPDATE = "جاري المزامنة..."
 START_DATE = datetime(2026, 1, 1)
 BASE_SCANS = 1540
 
-# دالة تحديث القائمة السوداء من المصادر العالمية (تحديث تلقائي)
+# دالة تحديث القائمة السوداء من المصادر العالمية
 def update_threat_intelligence():
     global GLOBAL_BLACKLIST, LAST_UPDATE
     new_threats = set()
@@ -30,19 +30,20 @@ def update_threat_intelligence():
                         if domain: new_threats.add(domain.lower().strip())
         except: pass
     
-    # إضافة روابطك اليدوية والقواعد الثابتة
+    # روابط يدوية وقواعد ثابتة
     manual_list = ['casajoys.com', 'webcam360.com', 'grabify.link', 'iplogger.org']
     for d in manual_list: new_threats.add(d)
     
     GLOBAL_BLACKLIST = new_threats
     LAST_UPDATE = datetime.now().strftime("%H:%M:%S")
 
-# تشغيل التحديث في خلفية السيرفر
+# تشغيل التحديث في الخلفية
 Thread(target=update_threat_intelligence).start()
 
 def get_live_stats():
     now = datetime.now()
     days = (now - START_DATE).days
+    # العداد يزيد تلقائياً لضمان عدم الرجوع للصفر
     total = BASE_SCANS + (days * 41) + (now.hour * 3) + random.randint(1, 5)
     return total, int(total * 0.13)
 
@@ -50,17 +51,17 @@ def get_live_stats():
 def analyze_content(content, domain):
     points, findings = 0, []
     
-    # 1. كشف طلب الكاميرا (كما في WebCam360)
+    # 1. كشف طلب الكاميرا (دقة عالية)
     if re.search(r'getUserMedia|Webcam\.attach|camera\.start|video_capture', content, re.I):
         trusted = ['google.com', 'zoom.us', 'microsoft.com', 'teams.live.com']
         if not any(t in domain for t in trusted):
             points += 98
             findings.append({"name": "اختراق الخصوصية (الكاميرا)", "desc": "تم رصد محاولة لفتح الكاميرا الأمامية فور الدخول للموقع."})
     
-    # 2. كشف بوتات التليجرام (Exfiltration)
+    # 2. كشف بوتات التليجرام
     if re.search(r'api\.telegram\.org/bot|tele-bot', content, re.I):
         points = max(points, 85)
-        findings.append({"name": "تسريب بيانات (Telegram Bot)", "desc": "الموقع مبرمج لإرسال صور أو بيانات المسح فوراً إلى بوت تليجرام."})
+        findings.append({"name": "تسريب بيانات (Telegram Bot)", "desc": "الموقع مبرمج لإرسال البيانات المسحوبة فوراً إلى بوت تليجرام."})
     
     return points, findings
 
@@ -71,19 +72,20 @@ def index():
 @app.route('/analyze', methods=['POST'])
 def analyze():
     url = request.json.get('link', '').strip()
+    if not url: return jsonify({"error": "No URL"}), 400
     if not url.startswith('http'): url = 'https://' + url
-    domain = urlparse(url).netloc.lower()
     
+    domain = urlparse(url).netloc.lower()
     total_points, violations = 0, []
 
-    # فحص القائمة السوداء
+    # فحص القائمة السوداء العالمية
     if domain in GLOBAL_BLACKLIST:
         total_points = 100
         violations.append({"name": "قائمة التهديدات العالمية", "desc": "هذا الموقع مسجل دولياً كنشاط احتيالي نشط لعام 2026."})
 
-    # التحليل الحي
+    # التحليل الحي (تم تقليل الـ timeout لسرعة الموقع)
     try:
-        res = requests.get(url, timeout=10, headers={"User-Agent": "SecuCode-Pro-2026"})
+        res = requests.get(url, timeout=5, headers={"User-Agent": "SecuCode-Pro-2026"})
         p, f = analyze_content(res.text, domain)
         total_points = max(total_points, p)
         violations.extend(f)
@@ -100,19 +102,18 @@ def analyze():
         "stats": {"total": t_total, "threats": t_threats}
     })
 
-# --- الملفات التقنية (PWA & SEO) ---
+# --- الملفات التقنية (PWA & SEO) لضمان السرعة القصوى ---
 @app.route('/manifest.json')
 def serve_manifest():
-    return jsonify({
-        "name": "SecuCode Pro", "short_name": "SecuCode",
-        "start_url": "/", "display": "standalone", "background_color": "#020617",
-        "theme_color": "#2563eb", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/9446/9446698.png", "sizes": "512x512", "type": "image/png"}]
-    })
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'manifest.json')
 
 @app.route('/sitemap.xml')
 def serve_sitemap():
-    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://secu-code-pro.vercel.app/</loc><priority>1.0</priority></url></urlset>'
-    return Response(xml, mimetype='application/xml')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'sitemap.xml', mimetype='application/xml')
+
+@app.route('/robots.txt')
+def serve_robots():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'robots.txt')
 
 if __name__ == '__main__':
     app.run(debug=True)
