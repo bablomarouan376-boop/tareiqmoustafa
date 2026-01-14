@@ -1,5 +1,5 @@
 import os, re, requests, time
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from urllib.parse import urlparse
 from threading import Thread
 
@@ -9,16 +9,29 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = "8072400877:AAEhIU4s8csph7d6NBM5MlZDlfWIAV7ca2o"
 CHAT_ID = "7421725464"
 
-# --- [ محرك الذكاء الأمني ] ---
+# --- [ مسارات ملفات الأرشفة والـ SEO من داخل مجلد static ] ---
+@app.route('/robots.txt')
+def static_from_root_robots():
+    return send_from_directory('static', 'robots.txt')
+
+@app.route('/sitemap.xml')
+def static_from_root_sitemap():
+    return send_from_directory('static', 'sitemap.xml')
+
+@app.route('/manifest.json')
+def static_from_root_manifest():
+    return send_from_directory('static', 'manifest.json')
+
+# --- [ محرك الذكاء الأمني المتقدم ] ---
 BLACKLIST_DB = set()
-WHITELIST = {'google.com', 'facebook.com', 'microsoft.com', 'apple.com', 'twitter.com', 'github.com', 'youtube.com', 'linkedin.com'}
+WHITELIST = {'google.com', 'facebook.com', 'microsoft.com', 'apple.com', 'github.com'}
 
 def sync_engine():
     global BLACKLIST_DB
     while True:
         try:
             new_db = set()
-            sources = ["https://openphish.com/feed.txt", "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"]
+            sources = ["https://openphish.com/feed.txt"]
             for s in sources:
                 r = requests.get(s, timeout=15)
                 if r.status_code == 200:
@@ -31,7 +44,8 @@ def sync_engine():
 Thread(target=sync_engine, daemon=True).start()
 
 @app.route('/')
-def index(): return render_template('index.html')
+def index(): 
+    return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -45,23 +59,19 @@ def analyze():
         if any(w in domain for w in WHITELIST):
             score, violations = 0, [{"name": "Trusted Authority", "desc": "النطاق مسجل ضمن المؤسسات الموثوقة عالمياً."}]
         elif domain in BLACKLIST_DB:
-            score, violations = 100, [{"name": "Malicious Host", "desc": "تم رصد النطاق في قوائم التهديدات النشطة (Blacklist)."}]
+            score, violations = 100, [{"name": "Malicious Host", "desc": "تم رصد النطاق في قوائم التهديدات النشطة (Phishing Database)."}]
         else:
-            # فحص برمجي للمحتوى
             res = requests.get(url, timeout=8, headers={"User-Agent": "SecuCode-Sentry-2026"}, verify=False)
             html = res.text
-            if re.search(r'getUserMedia|mediaDevices|camera|videoinput', html, re.I):
+            if re.search(r'getUserMedia|mediaDevices|camera|microphone', html, re.I):
                 score = 98
-                violations.append({"name": "Spyware Pattern", "desc": "محاولة غير مصرح بها لتفعيل الكاميرا برمجياً."})
-            if re.search(r'password|login|كلمة المرور|signin', html, re.I):
-                score = max(score, 85)
-                violations.append({"name": "Phishing UI", "desc": "واجهة انتحالية لسرقة بيانات الاعتماد الشخصية."})
+                violations.append({"name": "Spyware Pattern", "desc": "تم رصد أكواد تحاول الوصول للكاميرا أو الميكروفون بشكل مريب."})
             if not violations:
-                violations = [{"name": "Clean Logic", "desc": "لم يتم رصد أي سلوك عدواني أو مشبوه في الطبقة البرمجية للموقع."}]
+                violations = [{"name": "Clean Logic", "desc": "تحليل السلوك البرمجي لم يظهر أي أنشطة عدوانية حالياً."}]
     except:
-        score, violations = 45, [{"name": "Analysis Shield", "desc": "الموقع محمي بجدار يمنع الفحص العميق (WAF/Anti-Bot)."}]
+        score, violations = 45, [{"name": "Analysis Shield", "desc": "الموقع يمنع الفحص الآلي، نوصي بالحذر عند إدخال بياناتك."}]
 
-    # إرسال التقرير لتليجرام
+    # إرسال إشعار تليجرام لطارق
     try:
         status = "🛑 CRITICAL" if score >= 80 else "🛡️ SAFE"
         msg = f"🔍 [SCAN] SecuCode Pro\n🌐 Host: {domain}\n📊 Risk: {score}%\n⚠️ Status: {status}"
