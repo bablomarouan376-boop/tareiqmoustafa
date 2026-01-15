@@ -2,13 +2,16 @@
 <html lang="ar" dir="rtl" id="htmlTag">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SecuCode Pro | Elite Cyber Security</title>
-    <meta name="description" content="نظام طارق مصطفى المتطور لفحص الروابط بالذكاء الاصطناعي والأمن السيبراني.">
     
+    <meta name="description" content="نظام طارق مصطفى المتطور لفحص الروابط بالذكاء الاصطناعي والأمن السيبراني.">
     <meta property="og:title" content="SecuCode Pro | AI Security">
     <meta property="og:image" content="/static/og-image.jpg">
     <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -24,6 +27,7 @@
             min-height: 100vh;
             margin: 0;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         [lang="en"] body { font-family: 'Inter', sans-serif; }
         
@@ -44,22 +48,14 @@
         }
 
         .modal { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            z-index: 9999; 
-            background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(12px); 
-            align-items: center; 
-            justify-content: center; 
-            opacity: 0; 
-            transition: opacity 0.3s ease; 
+            display: none; position: fixed; inset: 0; z-index: 9999; 
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); 
+            align-items: center; justify-content: center; opacity: 0; transition: 0.3s; 
         }
         .modal.active { display: flex; opacity: 1; }
         
-        /* تصميم مكان الكاميرا */
         #reader { width: 100% !important; border: none !important; border-radius: 15px; overflow: hidden; }
-        #reader video { border-radius: 15px; }
+        #reader video { border-radius: 15px; object-fit: cover; }
 
         .shimmer {
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
@@ -67,10 +63,6 @@
             animation: shimmer 3s infinite;
         }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -82,47 +74,39 @@
                     <i data-lucide="shield-check" class="w-10 h-10 text-blue-500"></i>
                 </div>
                 <div>
-                    <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase">
-                        SECUCODE <span class="text-blue-600">PRO</span>
-                    </h1>
-                    <p id="txt-hero-sub" class="text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase mt-1">نظام طارق مصطفى للذكاء الاصطناعي الأمني</p>
+                    <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase">SECUCODE <span class="text-blue-600">PRO</span></h1>
+                    <p id="txt-hero-sub" class="text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase mt-1 text-center md:text-right">نظام طارق مصطفى للذكاء الاصطناعي الأمني</p>
                 </div>
             </div>
             <button onclick="toggleLang()" id="langBtn" class="glass px-10 py-3 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all border-white/5">English</button>
         </header>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
-            <div class="glass p-6 group hover:border-blue-500/30 transition-colors">
+            <div class="glass p-6 group transition-colors">
                 <h3 id="txt-total-lbl" class="text-[10px] font-black text-slate-500 uppercase mb-2">إجمالي التحليلات</h3>
                 <p id="totalScanned" class="text-3xl font-black font-mono">--</p>
             </div>
-            <div class="glass p-6 group hover:border-red-500/30 transition-colors">
+            <div class="glass p-6 group transition-colors">
                 <h3 id="txt-threats-lbl" class="text-[10px] font-black text-slate-500 uppercase mb-2">تهديدات محجوبة</h3>
                 <p id="threatsDetected" class="text-3xl font-black text-red-500 font-mono">--</p>
             </div>
-            <div class="glass p-6">
-                <h3 id="txt-accuracy-lbl" class="text-[10px] font-black text-slate-500 uppercase mb-2">مؤشر الدقة</h3>
-                <p class="text-3xl font-black text-emerald-500 font-mono">100%</p>
-            </div>
-            <div class="glass p-6 flex items-center justify-center">
-                <span id="txt-status" class="text-[9px] font-black text-purple-400 uppercase italic animate-pulse tracking-widest">Live Sync</span>
-            </div>
+            <div class="glass p-6"><h3 id="txt-accuracy-lbl" class="text-[10px] font-black text-slate-500 uppercase mb-2">مؤشر الدقة</h3><p class="text-3xl font-black text-emerald-500 font-mono">100%</p></div>
+            <div class="glass p-6 flex items-center justify-center"><span id="txt-status" class="text-[9px] font-black text-purple-400 uppercase italic animate-pulse tracking-widest">Live Sync</span></div>
         </div>
 
         <section class="glass p-8 md:p-12 space-y-6 relative overflow-hidden">
             <div class="shimmer absolute inset-0 pointer-events-none"></div>
             <div class="relative z-10 space-y-5">
                 <label id="txt-input-label" class="block text-xs font-black text-blue-400 mr-2 uppercase tracking-[0.2em]">أدخل الرابط المراد تحليله سلوكياً:</label>
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1 flex gap-2">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-2 w-full">
                         <input type="url" id="urlInput" placeholder="https://example.com" 
-                            class="flex-1 bg-black/40 border border-white/10 p-5 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-left dir-ltr font-bold text-lg">
-                        <button onclick="openScanner()" class="bg-white/5 hover:bg-white/10 px-5 rounded-2xl border border-white/10 transition-all">
+                            class="flex-1 min-w-0 bg-black/40 border border-white/10 p-5 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-left dir-ltr font-bold text-lg">
+                        <button onclick="openScanner()" class="flex-shrink-0 w-16 h-[68px] flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all active:scale-95">
                             <i data-lucide="qr-code" class="w-6 h-6 text-blue-400"></i>
                         </button>
                     </div>
-                    <button onclick="runAnalysis()" id="scanBtn"
-                        class="bg-blue-600 hover:bg-blue-700 px-12 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95">
+                    <button onclick="runAnalysis()" id="scanBtn" class="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95">
                         <i data-lucide="zap" class="w-6 h-6"></i>
                         <span id="txt-scan-btn">إطلاق الرادار</span>
                     </button>
@@ -131,13 +115,9 @@
         </section>
 
         <div id="loader" class="hidden glass p-12 text-center space-y-6 animate-in fade-in duration-300">
-            <div class="flex justify-center">
-                <div class="animate-spin rounded-full h-14 w-14 border-b-2 border-blue-500"></div>
-            </div>
+            <div class="flex justify-center"><div class="animate-spin rounded-full h-14 w-14 border-b-2 border-blue-500"></div></div>
             <p id="loaderStatus" class="text-blue-400 animate-pulse font-black tracking-[0.3em] uppercase text-xs">جاري فحص بروتوكولات الأمان...</p>
-            <div class="max-w-md mx-auto bg-white/5 h-1.5 rounded-full overflow-hidden shadow-inner">
-                <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-500 shadow-[0_0_15px_#2563eb]"></div>
-            </div>
+            <div class="max-w-md mx-auto bg-white/5 h-1.5 rounded-full overflow-hidden shadow-inner"><div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-500 shadow-[0_0_15px_#2563eb]"></div></div>
         </div>
 
         <div id="resultsArea" class="hidden space-y-8 animate-in zoom-in-95 duration-700"></div>
@@ -153,7 +133,6 @@
 
     <div id="scannerModal" class="modal">
         <div class="glass p-6 w-full max-w-sm mx-4 relative border-blue-500/30">
-            <h2 class="text-center font-black mb-4 text-blue-400 uppercase tracking-widest text-xs">توجيه الكاميرا نحو الكود</h2>
             <div id="reader"></div>
             <button onclick="closeScanner()" class="w-full mt-4 py-3 glass text-red-500 font-black uppercase text-[10px]">إلغاء</button>
         </div>
@@ -162,13 +141,13 @@
     <div id="aboutModal" class="modal"><div class="glass p-10 max-w-2xl mx-4 relative border-blue-500/20 shadow-2xl">
         <button onclick="closeModal('aboutModal')" class="absolute top-6 left-6 text-slate-500 hover:text-white transition-colors"><i data-lucide="x"></i></button>
         <h2 id="txt-modal-title" class="text-3xl font-black text-blue-500 mb-6 italic uppercase tracking-tighter">بروتوكول النظام</h2>
-        <p id="txt-modal-desc" class="text-slate-300 leading-relaxed text-lg font-medium">نظام SecuCode Pro هو منصة رصد سيبراني متقدمة صممها المطور طارق مصطفى لتحليل سلوك الروابط واكتشاف التهديدات الرقمية.</p>
+        <p id="txt-modal-desc" class="text-slate-300 leading-relaxed text-lg font-medium">نظام رصد سيبراني متقدم صممه طارق مصطفى لتحليل الروابط سلوكياً وكشف التهديدات.</p>
     </div></div>
 
     <div id="privModal" class="modal"><div class="glass p-10 max-w-2xl mx-4 relative border-red-500/20 shadow-2xl">
         <button onclick="closeModal('privModal')" class="absolute top-6 left-6 text-slate-500 hover:text-white transition-colors"><i data-lucide="x"></i></button>
         <h2 id="txt-priv-title" class="text-3xl font-black text-red-500 mb-6 italic uppercase tracking-tighter">سياسة التشفير</h2>
-        <p id="txt-priv-desc" class="text-slate-300 leading-relaxed text-lg font-medium">نحن نلتزم بأعلى معايير الخصوصية. جميع عمليات الفحص تتم في بيئة سحابية معزولة ومشفرة تماماً ولا يتم تخزين أي بيانات حساسة.</p>
+        <p id="txt-priv-desc" class="text-slate-300 leading-relaxed text-lg font-medium">نحن نلتزم بأعلى معايير الخصوصية والتشفير التام لبياناتك.</p>
     </div></div>
 
     <script type="module">
@@ -181,34 +160,22 @@
 
         const i18n = {
             ar: {
-                hero: "نظام طارق مصطفى للذكاء الاصطناعي الأمني",
-                total: "إجمالي التحليلات", threats: "تهديدات محجوبة", acc: "مؤشر الدقة", status: "Live Sync",
-                inputLabel: "أدخل الرابط المراد تحليله سلوكياً:",
-                placeholder: "أدخل الرابط لبدء الفحص الشامل...", btn: "إطلاق الرادار",
+                hero: "نظام طارق مصطفى للذكاء الاصطناعي الأمني", total: "إجمالي التحليلات", threats: "تهديدات محجوبة", acc: "مؤشر الدقة", status: "Live Sync",
+                inputLabel: "أدخل الرابط المراد تحليله سلوكياً:", placeholder: "أدخل الرابط لبدء الفحص الشامل...", btn: "إطلاق الرادار",
                 about: "بروتوكول النظام", priv: "سياسة التشفير", copy: "© 2026 SECUCODE PRO • BY TAREK MOSTAFA",
                 mTitle: "بروتوكول النظام", mDesc: "نظام رصد سيبراني متقدم صممه طارق مصطفى لتحليل الروابط سلوكياً وكشف محاولات التجسس الرقمي.",
                 pTitle: "سياسة التشفير", pDesc: "جميع الروابط مشفرة (End-to-End) ولا يتم تخزين أي بيانات شخصية تخص المستخدمين لضمان حماية تامة.",
                 resSafe: "بيئة تصفح آمنة", resCrit: "تهديد أمني حرج", risk: "معامل الخطورة",
-                CLEAN: "التحليل السلوكي لم يظهر أي أنشطة عدوانية حالياً.",
-                TRUSTED: "النطاق مسجل ضمن المؤسسات الموثوقة عالمياً.",
-                SPYWARE: "تم رصد أكواد تحاول الوصول للكاميرا أو الميكروفون.",
-                EXCESSIVE_SCRIPTS: "الموقع يحتوي على عدد كبير من النصوص البرمجية المريبة.",
-                SHIELD: "الموقع يمنع الفحص الآلي، نوصي بالحذر."
+                CLEAN: "التحليل السلوكي لم يظهر أي أنشطة عدوانية حالياً.", SHIELD: "الموقع يمنع الفحص الآلي، نوصي بالحذر."
             },
             en: {
-                hero: "Tarek Mostafa Security Intelligence AI",
-                total: "TOTAL SCANS", threats: "THREATS BLOCKED", acc: "ACCURACY RATE", status: "Live Sync",
-                inputLabel: "ENTER URL FOR BEHAVIORAL ANALYSIS:",
-                placeholder: "Input URL for security scan...", btn: "EXECUTE RADAR",
+                hero: "Tarek Mostafa Security Intelligence AI", total: "TOTAL SCANS", threats: "THREATS BLOCKED", acc: "ACCURACY RATE", status: "Live Sync",
+                inputLabel: "ENTER URL FOR BEHAVIORAL ANALYSIS:", placeholder: "Input URL for security scan...", btn: "EXECUTE RADAR",
                 about: "SYSTEM PROTOCOL", priv: "ENCRYPTION POLICY", copy: "© 2026 SECUCODE PRO • BY TAREK MOSTAFA",
-                mTitle: "SYSTEM PROTOCOL", mDesc: "Advanced cyber-monitoring platform by Tarek Mostafa, analyzing link behavior and detecting digital espionage.",
-                pTitle: "ENCRYPTION POLICY", pDesc: "All links are End-to-End encrypted. No personal data is stored, ensuring total anonymity.",
+                mTitle: "SYSTEM PROTOCOL", mDesc: "Advanced cyber-monitoring platform by Tarek Mostafa, analyzing link behavior and detecting threats.",
+                pTitle: "ENCRYPTION POLICY", pDesc: "All links are End-to-End encrypted. No personal data is stored.",
                 resSafe: "SECURE ENVIRONMENT", resCrit: "CRITICAL THREAT", risk: "RISK FACTOR",
-                CLEAN: "Behavioral analysis showed no active threats or aggressive patterns.",
-                TRUSTED: "Domain is registered under globally trusted authorities.",
-                SPYWARE: "Spyware patterns detected trying to access camera or microphone.",
-                EXCESSIVE_SCRIPTS: "Site contains suspicious amounts of hidden executable scripts.",
-                SHIELD: "Site blocks automated analysis; we recommend caution."
+                CLEAN: "Behavioral analysis showed no active threats.", SHIELD: "Site blocks automated analysis; caution recommended."
             }
         };
 
@@ -219,7 +186,6 @@
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
             const d = i18n[currentLang];
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = currentLang;
             document.getElementById('langBtn').innerText = currentLang === 'ar' ? 'English' : 'العربية';
             document.getElementById('txt-hero-sub').innerText = d.hero;
             document.getElementById('txt-total-lbl').innerText = d.total;
@@ -239,24 +205,21 @@
             lucide.createIcons();
         };
 
-        // وظائف الكاميرا
         window.openScanner = async function() {
             document.getElementById('scannerModal').classList.add('active');
             html5QrCode = new Html5Qrcode("reader");
             try {
-                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
+                await html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (decodedText) => {
                     document.getElementById('urlInput').value = decodedText;
                     closeScanner();
                     window.runAnalysis();
                 });
-            } catch (err) { alert("الكاميرا غير متاحة"); closeScanner(); }
+            } catch (err) { alert("Camera not accessible"); closeScanner(); }
         };
 
         window.closeScanner = () => {
             if(html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('scannerModal').classList.remove('active');
-                }).catch(() => document.getElementById('scannerModal').classList.remove('active'));
+                html5QrCode.stop().then(() => document.getElementById('scannerModal').classList.remove('active')).catch(() => document.getElementById('scannerModal').classList.remove('active'));
             } else { document.getElementById('scannerModal').classList.remove('active'); }
         };
 
@@ -269,27 +232,18 @@
         window.runAnalysis = async function() {
             const input = document.getElementById('urlInput');
             const url = input.value.trim();
-            if(!url) {
-                input.classList.add('border-red-500');
-                setTimeout(() => input.classList.remove('border-red-500'), 2000);
-                return;
-            }
+            if(!url) return;
             
             const loader = document.getElementById('loader');
             const resultsArea = document.getElementById('resultsArea');
             const progress = document.getElementById('progressBar');
-            const statusText = document.getElementById('loaderStatus');
-            const scanBtn = document.getElementById('scanBtn');
             
             resultsArea.classList.add('hidden');
             loader.classList.remove('hidden');
-            scanBtn.disabled = true;
-
-            const steps = ["تحليل بنية الأكواد...", "فحص الصلاحيات...", "مطابقة قواعد البيانات...", "إصدار التقرير..."];
-            for(let i=0; i<steps.length; i++) {
-                statusText.innerText = (currentLang === 'ar' ? steps[i] : "Initializing Security Matrix...");
-                progress.style.width = `${(i+1)*25}%`;
-                await new Promise(r => setTimeout(r, 600));
+            
+            for(let i=1; i<=4; i++) {
+                progress.style.width = `${i*25}%`;
+                await new Promise(r => setTimeout(r, 400));
             }
 
             try {
@@ -302,12 +256,8 @@
                 runTransaction(ref(db, 'stats/clicks'), (c) => (c || 0) + 1);
                 if(data.risk_score === 'Critical') runTransaction(ref(db, 'stats/threats'), (t) => (t || 0) + 1);
                 renderResults(data, url);
-            } catch (e) { alert("خطأ في الاتصال بالسيرفر"); }
-            finally { 
-                loader.classList.add('hidden'); 
-                scanBtn.disabled = false;
-                progress.style.width = '0%';
-            }
+            } catch (e) { alert("Connection error"); }
+            finally { loader.classList.add('hidden'); progress.style.width = '0%'; }
         };
 
         function renderResults(data, originalUrl) {
@@ -317,31 +267,23 @@
             const isCrit = data.risk_score === 'Critical';
             const color = isCrit ? '#ef4444' : '#10b981';
             const bgClass = isCrit ? 'glow-red border-red-500/40' : 'border-emerald-500/40';
-            const description = d[data.violation_key] || d.SHIELD;
 
             area.innerHTML = `
                 <div class="grid lg:grid-cols-5 gap-6">
-                    <div class="lg:col-span-3 glass p-8 md:p-12 ${bgClass} flex flex-col justify-between relative overflow-hidden transition-all duration-500">
-                        <div class="relative z-10">
+                    <div class="lg:col-span-3 glass p-8 md:p-12 ${bgClass} flex flex-col justify-between transition-all duration-500">
+                        <div>
                             <div class="flex items-center gap-5 mb-8">
                                 <i data-lucide="${isCrit ? 'alert-octagon' : 'shield-check'}" class="w-12 h-12" style="color: ${color}"></i>
-                                <h2 class="text-4xl font-black italic uppercase tracking-tighter" style="color: ${color}">${isCrit ? d.resCrit : d.resSafe}</h2>
+                                <h2 class="text-4xl font-black italic uppercase" style="color: ${color}">${isCrit ? d.resCrit : d.resSafe}</h2>
                             </div>
-                            <p class="text-slate-200 text-xl leading-relaxed font-bold">${description}</p>
+                            <p class="text-slate-200 text-xl font-bold">${d[data.violation_key] || d.SHIELD}</p>
                         </div>
                         <div class="mt-12 pt-8 border-t border-white/10 flex items-end justify-between">
-                            <div>
-                                <span class="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em]">${d.risk}</span>
-                                <p class="text-7xl font-black font-mono leading-none mt-1" style="color: ${color}">${data.points}%</p>
-                            </div>
-                            <div class="text-right text-[9px] text-slate-600 font-black tracking-widest leading-loose">SECUCODE AI ENGINE v4.2<br>TAREK MOSTAFA • 2026</div>
+                            <div><span class="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em]">${d.risk}</span><p class="text-7xl font-black font-mono leading-none mt-1" style="color: ${color}">${data.points}%</p></div>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 glass p-4 shadow-2xl overflow-hidden group min-h-[350px]">
-                        <div class="rounded-xl overflow-hidden h-full">
-                            <img src="${data.screenshot}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                                 onerror="this.src='https://s0.wp.com/mshots/v1/${encodeURIComponent(originalUrl)}?w=800&h=600'">
-                        </div>
+                    <div class="lg:col-span-2 glass p-4 shadow-2xl overflow-hidden min-h-[350px]">
+                        <img src="${data.screenshot}" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://s0.wp.com/mshots/v1/${encodeURIComponent(originalUrl)}?w=800&h=600'">
                     </div>
                 </div>`;
             lucide.createIcons();
