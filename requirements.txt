@@ -1,6 +1,10 @@
-# requirements.txt
-Flask
+# requirements.txt (Updated with new dependencies)
+flask
 requests
+flask-limiter
+tldextract
+firebase_admin
+openai
 validators
 gunicorn
 urllib3
