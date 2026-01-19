@@ -8,6 +8,11 @@
   "icons": [
     {
       "src": "/static/og-image.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/static/og-image.jpg",
       "sizes": "512x512",
       "type": "image/jpeg"
     }
