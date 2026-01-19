@@ -1,5 +1,3 @@
-<!-- templates/index.html (Updated with: progress bar, dark/light mode, share buttons, history dashboard, charts with Chart.js, more detailed results) -->
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlTag">
 <head>
@@ -16,11 +14,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Added for charts -->
     
     <style>
         :root { --accent-blue: #3b82f6; --accent-red: #ef4444; --accent-green: #10b981; }
-        body { font-family: 'Cairo', 'Inter', sans-serif; min-height: 100vh; }
+        body { font-family: 'Cairo', 'Inter', sans-serif; background: #020617; color: white; min-height: 100vh; }
         .cyber-grid { background-image: radial-gradient(circle, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 25px 25px; }
         .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.5rem; }
         .modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.95); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
@@ -30,15 +27,9 @@
         .glow-green { box-shadow: 0 0 50px rgba(16, 185, 129, 0.2); }
         .error-shake { animation: shake 0.4s ease-in-out; border-color: var(--accent-red) !important; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        
-        /* Dark/Light mode */
-        body.dark { background: #020617; color: white; }
-        body.light { background: #f8fafc; color: #020617; }
-        body.light .glass { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0, 0, 0, 0.08); }
-        body.light .cyber-grid { background-image: radial-gradient(circle, rgba(59, 130, 246, 0.05) 1px, transparent 1px); }
     </style>
 </head>
-<body class="cyber-grid p-4 md:p-8 dark"> <!-- Default dark -->
+<body class="cyber-grid p-4 md:p-8">
     <main class="max-w-6xl mx-auto space-y-8">
         
         <header class="flex flex-col md:flex-row justify-between items-center gap-6 glass p-6 shadow-2xl">
@@ -51,10 +42,7 @@
                     <p id="txt-hero-sub" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"></p>
                 </div>
             </div>
-            <div class="flex gap-4">
-                <button onclick="toggleLang()" id="langBtn" class="px-8 py-2 glass hover:bg-white/5 text-[10px] font-black uppercase transition-all tracking-widest border-white/10"></button>
-                <button onclick="toggleTheme()" id="themeBtn" class="px-8 py-2 glass hover:bg-white/5 text-[10px] font-black uppercase transition-all tracking-widest border-white/10">Light</button>
-            </div>
+            <button onclick="toggleLang()" id="langBtn" class="px-8 py-2 glass hover:bg-white/5 text-[10px] font-black uppercase transition-all tracking-widest border-white/10"></button>
         </header>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -97,31 +85,14 @@
         <div id="loader" class="hidden glass p-16 text-center">
             <div class="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6"></div>
             <p id="loaderStatus" class="text-blue-500 font-black text-[11px] uppercase tracking-[0.3em]"></p>
-            <progress id="progressBar" value="0" max="100" class="w-full h-2 mt-4"></progress> <!-- Added progress bar -->
         </div>
 
         <div id="resultsArea" class="hidden space-y-6"></div>
-
-        <!-- New: History Dashboard -->
-        <section id="historySection" class="glass p-8 hidden">
-            <h2 class="text-2xl font-black text-blue-500 uppercase mb-6">Scan History</h2>
-            <ul id="historyList" class="space-y-4"></ul>
-            <button onclick="loadHistory()" class="bg-blue-600 py-4 px-6 rounded-2xl font-black text-xs uppercase mt-4">Refresh History</button>
-        </section>
-
-        <!-- New: Stats Chart -->
-        <section id="statsSection" class="glass p-8 hidden">
-            <h2 class="text-2xl font-black text-blue-500 uppercase mb-6">Global Stats</h2>
-            <canvas id="statsChart" width="400" height="200"></canvas>
-            <button onclick="loadStats()" class="bg-blue-600 py-4 px-6 rounded-2xl font-black text-xs uppercase mt-4">Refresh Stats</button>
-        </section>
 
         <footer class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] text-slate-500 font-black uppercase">
             <div class="flex gap-10">
                 <button onclick="openModal('aboutModal')" id="txt-footer-about" class="hover:text-blue-500"></button>
                 <button onclick="openModal('privModal')" id="txt-footer-priv" class="hover:text-red-500"></button>
-                <button onclick="toggleSection('historySection')" class="hover:text-green-500">History</button>
-                <button onclick="toggleSection('statsSection')" class="hover:text-green-500">Stats</button>
             </div>
             <p id="txt-copyright"></p>
         </footer>
@@ -139,59 +110,118 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const i18n = { /* ... same as original ... */ }; // Keep original i18n
+        const i18n = {
+            ar: {
+                hero: "المطور الرئيسي: طارق مصطفى • الإصدار 1.3",
+                total: "إجمالي التحقيقات الرقمية", threats: "التهديدات المحيدة", acc: "دقة التحليل الهيكلي", status: "نظام الذكاء: فعال",
+                inputLabel: "تحليل متجهات البيانات للهدف:", inputSub: "نظام الاستخبارات الجنائية - طارق مصطفى 2026",
+                btn: "إطلاق الفحص الهجومي", clear: "تطهير النواقل", loading: "جاري تحليل بصمة النطاق...",
+                closeCam: "تعطيل المستشعر", closeBtn: "إغلاق التقرير", about: "بروتوكول النظام", priv: "معايير التشفير",
+                copy: "© 2026 SecuCode Pro • طارق مصطفى",
+                urlError: "خطأ: يرجى إدخال رابط أو دومين صالح للتحليل.",
+                mAboutTitle: "بروتوكول SecuCode Pro",
+                mAboutDesc: "نظام جنائي رقمي متطور يعتمد على تحليل السلوك النمطي للروابط. تم تطوير المحرك بواسطة طارق مصطفى للكشف عن محاولات التصيد والتمويه السيبراني.",
+                mPrivTitle: "معايير التشفير والخصوصية",
+                mPrivDesc: "كافة الفحوصات تتم عبر قنوات مشفرة 256-bit. حماية خصوصية المستخدم هي الأولوية القصوى لدينا.",
+                sig: "بصمة التشفير: TAREK MOSTAFA CORE", risk: "معامل الخطورة", mode: "النمط التشغيلي", diagnostic: "التشخيص الفني:", recTitle: "التوجيهات الأمنية:",
+                resSafe: "بروتوكول موثوق: مصرح به", resCrit: "تهديد سيبراني محتمل",
+                OFFICIAL_TRUST: "تم التحقق من الهوية: هذا النطاق يتبع الخوادم الرسمية الموثوقة عالمياً.",
+                CLEAN_AUDIT: "التحليل السلوكي سليم: لم يتم رصد أي أنماط عدوانية مشبوهة.",
+                SUSPICIOUS: "تنبيه أمني: تم اكتشاف محاولة تمويه لنشاط عدواني أو انتحال صفة.",
+                watermark: "بواسطة طارق مصطفى"
+            },
+            en: {
+                hero: "Lead Developer: Tarek Mostafa • V1.3",
+                total: "TOTAL AUDITS", threats: "THREATS NEUTRALIZED", acc: "ACCURACY", status: "AI SYSTEM: ACTIVE",
+                inputLabel: "EXECUTE VECTOR ANALYSIS:", inputSub: "INTEL CORE: TAREK MOSTAFA 2026",
+                btn: "START SCAN", clear: "PURGE VECTORS", loading: "Analyzing fingerprint...",
+                closeCam: "Close Sensor", closeBtn: "Close Report", about: "PROTOCOL", priv: "ENCRYPTION",
+                copy: "© 2026 SecuCode Pro • TAREK MOSTAFA",
+                urlError: "Error: Please enter a valid URL or Domain.",
+                mAboutTitle: "SecuCode Pro Protocol",
+                mAboutDesc: "Advanced digital forensic system developed by Tarek Mostafa.",
+                mPrivTitle: "Encryption & Privacy",
+                mPrivDesc: "256-bit encrypted channels. User privacy is our top priority.",
+                sig: "SIGNATURE: TAREK MOSTAFA CORE", risk: "RISK FACTOR", mode: "OPERATIONAL MODE", diagnostic: "TECHNICAL DIAGNOSIS:", recTitle: "SECURITY DIRECTIVES:",
+                resSafe: "TRUSTED PROTOCOL: AUTHORIZED", resCrit: "CYBER THREAT DETECTED",
+                OFFICIAL_TRUST: "Identity Verified: Domain belongs to globally trusted servers.",
+                CLEAN_AUDIT: "Analysis Clear: No malicious patterns detected.",
+                SUSPICIOUS: "Security Alert: Detected obfuscation or malicious activity.",
+                watermark: "By Tarek Mostafa"
+            }
+        };
 
         let currentLang = 'ar';
         let html5QrCode;
-        let userId = localStorage.getItem('userId') || 'user_' + Math.random().toString(36).slice(2); // Simple user ID
-        localStorage.setItem('userId', userId);
 
-        window.toggleLang = () => { /* ... same as original ... */ };
-
-        // New: Toggle theme
-        window.toggleTheme = () => {
-            document.body.classList.toggle('dark');
-            document.body.classList.toggle('light');
-            const isDark = document.body.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeBtn').innerText = isDark ? 'Light' : 'Dark';
+        window.toggleLang = () => {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            const d = i18n[currentLang];
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.getElementById('langBtn').innerText = currentLang === 'ar' ? 'English' : 'العربية';
+            document.getElementById('txt-hero-sub').innerText = d.hero;
+            document.getElementById('txt-total-lbl').innerText = d.total;
+            document.getElementById('txt-threats-lbl').innerText = d.threats;
+            document.getElementById('txt-accuracy-lbl').innerText = d.acc;
+            document.getElementById('txt-status').innerText = d.status;
+            document.getElementById('txt-scan-btn').innerText = d.btn;
+            document.getElementById('txt-clear').innerText = d.clear;
+            document.getElementById('txt-input-label').innerText = d.inputLabel;
+            document.getElementById('txt-input-sub').innerText = d.inputSub;
+            document.getElementById('txt-footer-about').innerText = d.about;
+            document.getElementById('txt-footer-priv').innerText = d.priv;
+            document.getElementById('txt-copyright').innerText = d.copy;
+            document.getElementById('txt-close-cam').innerText = d.closeCam;
+            document.getElementById('txt-m-about-title').innerText = d.mAboutTitle;
+            document.getElementById('txt-m-about-desc').innerText = d.mAboutDesc;
+            document.getElementById('txt-m-priv-title').innerText = d.mPrivTitle;
+            document.getElementById('txt-m-priv-desc').innerText = d.mPrivDesc;
+            document.querySelectorAll('.btn-close').forEach(b => b.innerText = d.closeBtn);
+            lucide.createIcons();
         };
-        // Load theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.classList.add(savedTheme);
-        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? 'Light' : 'Dark';
 
-        // ... same validation and clearInput ...
+        window.toggleLang();
+
+        function isValidURL(str) {
+            const pattern = new RegExp('^(https?:\\/\\/)?'+ '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ '((\\d{1,3}\\.){3}\\d{1,3}))'+ '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ '(\\?[;&a-z\\d%_.~+=-]*)?'+ '(\\#[-a-z\\d_]*)?$','i');
+            return !!pattern.test(str);
+        }
 
         window.runAnalysis = async function() {
-            // ... same input validation ...
+            const input = document.getElementById('urlInput');
+            const errorBox = document.getElementById('urlError');
+            let url = input.value.trim();
+            
+            input.classList.remove('error-shake');
+            errorBox.classList.add('hidden');
 
+            if(!url || !isValidURL(url)) {
+                input.classList.add('error-shake');
+                errorBox.innerText = i18n[currentLang].urlError;
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            if(!url.startsWith('http')) url = 'https://' + url;
+            
             document.getElementById('resultsArea').classList.add('hidden');
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('loaderStatus').innerText = i18n[currentLang].loading;
 
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 10;
-                document.getElementById('progressBar').value = progress;
-                if (progress >= 100) clearInterval(progressInterval);
-            }, 500); // Simulated progress
-
             try {
-                const res = await fetch('/analyze', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ link: url, user_id: userId }) 
-                });
+                const res = await fetch('/analyze', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ link: url }) });
                 const data = await res.json();
                 runTransaction(ref(db, 'stats/clicks'), c => (c || 0) + 1);
                 renderResults(data, url);
             } catch {
                 renderResults({points: 0, violation_key: 'CLEAN_AUDIT'}, url);
-            } finally { 
-                document.getElementById('loader').classList.add('hidden'); 
-                clearInterval(progressInterval);
-            }
+            } finally { document.getElementById('loader').classList.add('hidden'); }
+        };
+
+        window.clearInput = () => {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('urlError').classList.add('hidden');
+            document.getElementById('urlInput').classList.remove('error-shake');
         };
 
         function renderResults(data, url) {
@@ -199,73 +229,93 @@
             area.classList.remove('hidden');
             const d = i18n[currentLang];
             
-            // ... same logic for risk, theme, etc. ...
+            const officialList = ['google.com', 'facebook.com', 'youtube.com', 'microsoft.com', 'apple.com', 'github.com', 'linkedin.com', 'twitter.com', 'instagram.com', 'tiktok.com'];
+            const blackList = ['casajoys.com'];
+
+            const isOfficial = officialList.some(dom => url.toLowerCase().includes(dom));
+            const isBlacklisted = blackList.some(dom => url.toLowerCase().includes(dom));
+            
+            let risk = isOfficial ? 0 : (isBlacklisted ? 100 : (data.points || 45));
+            let isCrit = isBlacklisted || risk > 60;
+
+            let theme, statusTitle, diagnosticText, adviceText;
+
+            if (isOfficial) {
+                theme = 'var(--accent-green)';
+                statusTitle = d.resSafe;
+                diagnosticText = d.OFFICIAL_TRUST;
+                adviceText = currentLang === 'ar' ? "هذا النطاق معتمد عالمياً وآمن تماماً للاستخدام." : "This domain is globally verified and safe.";
+            } else if (isCrit) {
+                theme = 'var(--accent-red)';
+                statusTitle = d.resCrit;
+                diagnosticText = isBlacklisted ? (currentLang === 'ar' ? "تم حظر هذا النطاق يدوياً: معروف بتوزيع روابط ضارة ونشطة." : "Blacklisted Domain: Known for active malicious links.") : d.SUSPICIOUS;
+                adviceText = currentLang === 'ar' ? "خطر جسيم: تم رصد سلوك هجومي أو دومين محظور استخباراتياً. أغلق الصفحة فوراً." : "Critical Danger: Malicious behavior or blacklisted domain. Exit immediately.";
+                runTransaction(ref(db, 'stats/threats'), t => (t || 0) + 1);
+            } else {
+                theme = 'var(--accent-blue)';
+                statusTitle = currentLang === 'ar' ? "تحليل النطاق: قيد المراقبة" : "ANALYSIS: MONITORING";
+                diagnosticText = d.CLEAN_AUDIT;
+                adviceText = currentLang === 'ar' ? "النطاق لا يظهر أنشطة هجومية واضحة حالياً، لكنه غير مدرج كجهة رسمية موثوقة." : "No clear attack activity, but not a verified official domain.";
+            }
 
             area.innerHTML = `
-                <!-- ... same HTML structure, but add more details ... -->
                 <div class="grid lg:grid-cols-5 gap-8 animate-in zoom-in-95 duration-500">
-                    <!-- ... -->
-                    <div class="glass p-8 border-blue-500/10">
-                        <p class="text-[11px] font-black text-blue-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> ${d.recTitle}</p>
-                        <p class="text-sm text-slate-200 font-bold leading-relaxed">${adviceText}</p>
-                        <p class="mt-4">AI Analysis: ${data.details.ai_analysis || 'N/A'}</p>
-                        <p>Redirects: ${data.details.redirects || 0}</p>
+                    <div class="lg:col-span-3 glass p-10 ${isCrit ? 'glow-red' : (isOfficial ? 'glow-green' : '')}" style="border-top: 4px solid ${theme}">
+                        <div class="flex items-center gap-6 mb-10">
+                            <div class="p-2 rounded-2xl border border-white/5" style="background: ${theme}1a">
+                                <img src="/static/og-image.jpg" class="w-14 h-14 object-cover rounded-xl shadow-lg">
+                            </div>
+                            <div>
+                                <h2 class="text-3xl font-black italic uppercase" style="color: ${theme}">${statusTitle}</h2>
+                                <p class="text-[9px] text-slate-500 font-black uppercase tracking-widest">${d.sig}</p>
+                            </div>
+                        </div>
+                        <div class="bg-black/60 p-8 rounded-2xl mb-8 border-r-4" style="border-color: ${theme}">
+                            <h3 class="text-[10px] font-black text-slate-500 mb-3 uppercase">${d.diagnostic}</h3>
+                            <p class="text-white text-xl font-black italic leading-relaxed">${diagnosticText}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="glass p-5 shadow-inner text-center"><span class="text-[9px] text-slate-500 uppercase block font-black mb-1">${d.risk}</span><span class="text-2xl font-black font-mono" style="color: ${theme}">${risk}%</span></div>
+                            <div class="glass p-5 shadow-inner text-center"><span class="text-[9px] text-slate-500 uppercase block font-black mb-1">${d.mode}</span><span class="text-[10px] font-black text-blue-500 uppercase">${isOfficial ? 'SECURE_CORE' : 'FORENSIC_V1.3'}</span></div>
+                        </div>
                     </div>
-                    <!-- New: Share buttons -->
-                    <div class="flex gap-4 mt-4">
-                        <button onclick="shareResult('${url}', ${data.points})" class="bg-green-600 py-2 px-4 rounded">Share</button>
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass p-5 h-[320px] overflow-hidden relative">
+                            <img id="resImg" src="https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=800&h=600" class="w-full h-full object-cover rounded-2xl" onerror="this.src='/static/og-image.jpg'">
+                            <div class="watermark uppercase tracking-widest">${d.watermark}</div>
+                        </div>
+                        <div class="glass p-8 border-blue-500/10">
+                            <p class="text-[11px] font-black text-blue-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> ${d.recTitle}</p>
+                            <p class="text-sm text-slate-200 font-bold leading-relaxed">${adviceText}</p>
+                        </div>
                     </div>
                 </div>`;
             lucide.createIcons();
             area.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // New: Share function
-        window.shareResult = (url, score) => {
-            const text = `SecuCode Pro Scan: ${url} - Risk: ${score}%`;
-            if (navigator.share) {
-                navigator.share({ title: 'SecuCode Pro', text, url: window.location.href });
-            } else {
-                alert(text); // Fallback
-            }
+        window.openScanner = async function() {
+            document.getElementById('scannerModal').classList.add('active');
+            html5QrCode = new Html5Qrcode("reader");
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (txt) => {
+                document.getElementById('urlInput').value = txt;
+                closeScanner(); runAnalysis();
+            }).catch(() => closeScanner());
         };
 
-        // New: Load history
-        window.loadHistory = async () => {
-            const res = await fetch(`/history?user_id=${userId}`);
-            const history = await res.json();
-            const list = document.getElementById('historyList');
-            list.innerHTML = history.map(item => `<li class="glass p-4">URL: ${item.url} - Score: ${item.score}% - Time: ${new Date(item.timestamp * 1000).toLocaleString()}</li>`).join('');
+        window.closeScanner = () => {
+            if(html5QrCode) html5QrCode.stop().finally(() => document.getElementById('scannerModal').classList.remove('active'));
+            else document.getElementById('scannerModal').classList.remove('active');
         };
 
-        // New: Load stats and render chart
-        window.loadStats = async () => {
-            const res = await fetch('/stats');
-            const stats = await res.json();
-            const ctx = document.getElementById('statsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Total Scans', 'Threats'],
-                    datasets: [{ label: 'Stats', data: [stats.clicks, stats.threats], backgroundColor: ['#3b82f6', '#ef4444'] }]
-                },
-                options: { scales: { y: { beginAtZero: true } } }
-            });
-        };
+        onValue(ref(db, 'stats'), (s) => {
+            const v = s.val() || { clicks: 0, threats: 0 };
+            document.getElementById('totalScanned').innerText = v.clicks.toString().padStart(4, '0');
+            document.getElementById('threatsDetected').innerText = v.threats.toString().padStart(4, '0');
+        });
 
-        // New: Toggle sections
-        window.toggleSection = (id) => {
-            const section = document.getElementById(id);
-            section.classList.toggle('hidden');
-            if (!section.classList.contains('hidden')) {
-                if (id === 'historySection') loadHistory();
-                if (id === 'statsSection') loadStats();
-            }
-        };
-
-        // ... same scanner, modals, onValue for stats ...
-
-        window.toggleLang();
+        window.openModal = (id) => document.getElementById(id).classList.add('active');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
     </script>
 </body>
 </html>
