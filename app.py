@@ -1,74 +1,79 @@
-import os, json, requests, time, base64
-from flask import Flask, render_template, request, jsonify
-import firebase_admin
-from firebase_admin import credentials, db
+import os, re, requests, time
+from flask import Flask, request, jsonify, render_template, send_from_directory
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# إعداد Firebase (تأكد من وضع البيانات في Environment Variables في Vercel)
-fb_creds = os.environ.get('FIREBASE_CREDENTIALS')
-if fb_creds:
-    try:
-        creds_dict = json.loads(fb_creds)
-        if not firebase_admin._apps:
-            cred = credentials.Certificate(creds_dict)
-            firebase_admin.initialize_app(cred, {'databaseURL': 'https://secucode-pro-default-rtdb.firebaseio.com/'})
-    except: pass
+# بيانات المطور: طارق مصطفى
+TELEGRAM_TOKEN = "8072400877:AAEhIU4s8csph7d6NBM5MlZDlfWIAV7ca2o"
+CHAT_ID = "7421725464"
 
-VT_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY') or '07c7587e1d272b5f0187493944bb59ba9a29a56a16c2df681ab56b3f3c887564'
-TG_TOKEN = os.environ.get('TELEGRAM_TOKEN') or '8072400877:AAEhIU4s8csph7d6NBM5MlZDlfWIAV7ca2o'
-CH_ID = os.environ.get('CHAT_ID') or '7421725464'
+# 1. إصلاح مسارات الملفات الثابتة لتعمل في كل الظروف (Root & API)
+@app.route('/robots.txt')
+@app.route('/api/robots')
+def robots(): 
+    return send_from_directory('static', 'robots.txt')
 
+@app.route('/sitemap.xml')
+@app.route('/api/sitemap')
+def sitemap(): 
+    return send_from_directory('static', 'sitemap.xml')
+
+@app.route('/sw.js')
+@app.route('/api/sw')
+def sw(): 
+    return send_from_directory('static', 'sw.js')
+
+# 2. الواجهة الرئيسية
 @app.route('/')
-def index(): return render_template('index.html')
+@app.route('/api/index')
+def index(): 
+    return render_template('index.html')
 
-@app.route('/scan', methods=['POST'])
-def scan_url():
+@app.route('/analyze', methods=['POST'])
+@app.route('/api/analyze', methods=['POST'])
+def analyze():
     data = request.json
-    url = data.get('url')
-    user_id = data.get('user_id', 'anonymous')
+    if not data: return jsonify({"error": "No data"}), 400
     
-    # تحويل الرابط لـ ID متوافق مع VirusTotal
-    url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+    url = data.get('link', '').strip()
+    if not url: return jsonify({"error": "Empty URL"}), 400
+    if not url.startswith('http'): url = 'https://' + url
     
-    headers = {"x-apikey": VT_API_KEY}
-    vt_result = {"malicious": 0, "harmless": 0, "undetected": 0}
-    
+    score, v_key = 0, "CLEAN"
+    domain = urlparse(url).netloc.lower().replace('www.', '')
+
     try:
-        # جلب التحليل الأخير مباشرة لتسريع العملية
-        res = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers)
-        if res.status_code == 200:
-            vt_result = res.json()['data']['attributes']['last_analysis_stats']
+        # فحص القوائم الموثوقة
+        WHITELIST = {'google.com', 'facebook.com', 'microsoft.com', 'apple.com', 'github.com'}
+        if any(w in domain for w in WHITELIST):
+            score, v_key = 0, "TRUSTED"
         else:
-            # إذا لم يكن موجوداً، نطلب فحصاً جديداً
-            requests.post("https://www.virustotal.com/api/v3/urls", headers=headers, data={"url": url})
-    except: pass
+            # فحص سلوكي
+            res = requests.get(url, timeout=5, verify=False, headers={"User-Agent": "SecuCode-AI"})
+            html = res.text
+            if re.search(r'getUserMedia|camera|microphone', html, re.I):
+                score, v_key = 95, "SPYWARE"
+            elif len(re.findall(r'<script', html)) > 50:
+                score, v_key = 65, "EXCESSIVE_SCRIPTS"
+            else:
+                score, v_key = 20, "CLEAN"
+    except:
+        score, v_key = 45, "SHIELD"
 
-    status = "danger" if vt_result.get('malicious', 0) > 0 else "safe"
-
-    # تحديث Firebase
+    # إشعار تليجرام
     try:
-        db.reference('stats/total_scans').transaction(lambda curr: (curr or 0) + 1)
-        if status == "danger":
-            db.reference('stats/malicious_found').transaction(lambda curr: (curr or 0) + 1)
-        
-        db.reference(f'history/{user_id}').push({
-            'url': url, 'status': status, 'vt': vt_result, 'timestamp': time.time()
-        })
+        msg = f"🔍 [SCAN] {domain}\n📊 Risk: {score}%\n🛡️ Key: {v_key}"
+        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", 
+                      json={"chat_id": CHAT_ID, "text": msg}, timeout=1)
     except: pass
 
-    # إرسال تلجرام صامت (بدون إزعاج المستخدم في الواجهة)
-    try:
-        msg = f"🛡️ *SecuCode Scan*\n🔗 URL: {url}\n🚦 Status: {status.upper()}\n📊 Stats: {vt_result}"
-        requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage", json={"chat_id": CH_ID, "text": msg, "parse_mode": "Markdown"})
-    except: pass
-
-    return jsonify({"status": "success", "data": vt_result, "risk": status})
-
-@app.route('/history/<user_id>')
-def get_history(user_id):
-    data = db.reference(f'history/{user_id}').get() or {}
-    return jsonify(list(data.values())[::-1])
+    return jsonify({
+        "risk_score": "Critical" if score >= 75 else "Safe",
+        "points": score,
+        "violation_key": v_key,
+        "screenshot": f"https://s0.wp.com/mshots/v1/{url}?w=800&h=600"
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
