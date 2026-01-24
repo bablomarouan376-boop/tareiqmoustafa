@@ -10,101 +10,131 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
         :root { --accent-blue: #3b82f6; --accent-red: #ef4444; --accent-green: #10b981; }
-        html, body { overflow-x: hidden; width: 100%; margin: 0; padding: 0; background: #020617; }
-        body { font-family: 'Cairo', sans-serif; color: white; min-height: 100vh; }
+        
+        /* ضبط الجسم ليكون ممتداً بالكامل */
+        html, body { 
+            overflow-x: hidden; 
+            width: 100%; 
+            margin: 0; 
+            padding: 0; 
+            background: #020617; 
+            min-height: 100vh;
+        }
+        
+        body { font-family: 'Cairo', sans-serif; color: white; }
+        
         .cyber-grid { background-image: radial-gradient(circle, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 30px 30px; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; width: 100%; }
-        .main-wrapper { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; }
-        .modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
-        .modal.active { display: flex; opacity: 1; }
-        #official-print-template { width: 210mm; background: white !important; color: #000 !important; position: absolute; left: -9999px; padding: 15mm; z-index: -99; }
-        .paper-border { border: 2px solid #000; padding: 10px; min-height: 270mm; position: relative; }
-        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; font-weight: 900; color: rgba(0,0,0,0.03); pointer-events: none; white-space: nowrap; }
+        
+        /* الزجاج - ضمان العرض الكامل */
+        .glass { 
+            background: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 1.25rem; 
+            width: 100%; 
+            box-sizing: border-box;
+        }
+        
+        /* الحاوية الرئيسية - حل مشكلة المحاذاة والصغر */
+        .main-wrapper { 
+            max-width: 1200px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            width: 95%; /* استخدام 95% لترك مساحة صغيرة على الجوانب في الموبايل */
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5rem; 
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        /* الإحصائيات - شبكة مرنة */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
 
         @media (max-width: 768px) {
-            .main-wrapper { padding: 10px; }
-            h1 { font-size: 1.4rem !important; }
-            .stats-val { font-size: 1.25rem !important; }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 في الصف للموبايل */
+            }
+            .main-wrapper { width: 92%; }
         }
+
+        /* لإخفاء قالب الطباعة */
+        #official-print-template { width: 210mm; background: white !important; position: absolute; left: -9999px; padding: 15mm; }
     </style>
 </head>
-<body class="cyber-grid p-4 md:p-8">
+<body class="cyber-grid">
 
     <main class="main-wrapper">
-        <header class="flex flex-col md:flex-row justify-between items-center gap-6 glass p-6 border-b border-blue-500/20 shadow-2xl">
-            <div class="flex items-center gap-5">
-                <div class="p-1 bg-blue-600/10 rounded-xl border border-blue-500/20">
-                    <img src="https://raw.githubusercontent.com/bablomarouan376-boop/secu-code-pro/main/static/og-image.jpg" class="w-12 h-12 object-cover rounded-lg">
-                </div>
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-black italic tracking-tighter uppercase">SecuCode <span class="text-blue-500">Pro</span></h1>
-                    <p id="txt-hero-sub" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"></p>
+        <header class="flex justify-between items-center glass p-5 md:p-6 shadow-2xl">
+            <div class="flex items-center gap-4">
+                <img src="https://raw.githubusercontent.com/bablomarouan376-boop/secu-code-pro/main/static/og-image.jpg" class="w-10 h-10 object-cover rounded-lg border border-blue-500/30">
+                <div class="text-right">
+                    <h1 class="text-xl md:text-2xl font-black italic uppercase leading-none">SecuCode <span class="text-blue-500">Pro</span></h1>
+                    <p id="txt-hero-sub" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1"></p>
                 </div>
             </div>
-            <button onclick="toggleLang()" id="langBtn" class="w-full md:w-auto px-8 py-2 glass text-[10px] font-black uppercase tracking-widest border-white/5 hover:bg-blue-600/10 transition-all">English</button>
+            <button onclick="toggleLang()" id="langBtn" class="px-5 py-2 glass text-[10px] font-black uppercase border-white/5 hover:bg-blue-600/10 transition-all">English</button>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="glass p-5 border-r-4 border-r-blue-500 text-center md:text-right">
-                <p id="txt-total-lbl" class="text-[9px] text-slate-500 font-black uppercase mb-1"></p>
-                <span id="totalScanned" class="text-2xl stats-val font-black font-mono">0000</span>
+        <div class="stats-grid">
+            <div class="glass p-4 border-r-4 border-r-blue-500 text-center">
+                <p id="txt-total-lbl" class="text-[8px] text-slate-500 font-black mb-1 uppercase"></p>
+                <span id="totalScanned" class="text-xl font-black font-mono">0000</span>
             </div>
-            <div class="glass p-5 border-r-4 border-r-red-500 text-center md:text-right">
-                <p id="txt-threats-lbl" class="text-[9px] text-slate-500 font-black uppercase mb-1"></p>
-                <span id="threatsDetected" class="text-2xl stats-val font-black font-mono text-red-500">0000</span>
+            <div class="glass p-4 border-r-4 border-r-red-500 text-center">
+                <p id="txt-threats-lbl" class="text-[8px] text-slate-500 font-black mb-1 uppercase"></p>
+                <span id="threatsDetected" class="text-xl font-black font-mono text-red-500">0000</span>
             </div>
-            <div class="glass p-5 border-r-4 border-r-emerald-500 text-center md:text-right">
-                <p id="txt-accuracy-lbl" class="text-[9px] text-slate-500 font-black uppercase mb-1"></p>
-                <span class="text-2xl stats-val font-black font-mono text-emerald-500">100%</span>
+            <div class="glass p-4 border-r-4 border-r-emerald-500 text-center">
+                <p id="txt-accuracy-lbl" class="text-[8px] text-slate-500 font-black mb-1 uppercase"></p>
+                <span class="text-xl font-black font-mono text-emerald-500">100%</span>
             </div>
-            <div class="glass p-5 flex items-center justify-center">
-                <span id="txt-status" class="px-4 py-1.5 bg-blue-600/10 text-blue-400 text-[9px] font-black rounded-full uppercase border border-blue-500/20 animate-pulse"></span>
+            <div class="glass p-4 flex items-center justify-center">
+                <span id="txt-status" class="px-3 py-1 bg-blue-600/10 text-blue-400 text-[8px] font-black rounded-full uppercase animate-pulse"></span>
             </div>
         </div>
 
-        <section class="glass p-6 md:p-12 text-center space-y-8">
+        <section class="glass p-8 md:p-14 text-center space-y-8">
             <div class="space-y-2">
-                <h2 id="txt-input-label" class="text-xs font-black text-blue-500 uppercase tracking-[0.5em]"></h2>
-                <p id="txt-input-sub" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"></p>
+                <h2 id="txt-input-label" class="text-xs font-black text-blue-500 uppercase tracking-widest"></h2>
+                <p id="txt-input-sub" class="text-[9px] text-slate-500 font-bold uppercase"></p>
             </div>
-            <div class="relative group max-w-3xl mx-auto w-full font-mono">
-                <input type="text" id="urlInput" dir="ltr" class="w-full bg-black/40 border border-white/10 p-5 pr-16 md:p-6 md:pr-20 rounded-2xl focus:border-blue-600 transition-all text-center md:text-left outline-none text-sm md:text-base" placeholder="https://example.com">
-                <button onclick="openScanner()" class="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-blue-600/10 border border-blue-500/20 rounded-xl">
-                    <i data-lucide="qr-code" class="w-5 h-5 md:w-6 md:h-6 text-blue-400"></i>
-                </button>
+            <div class="max-w-3xl mx-auto w-full">
+                <input type="text" id="urlInput" dir="ltr" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl focus:border-blue-600 outline-none text-center text-lg shadow-inner" placeholder="https://example.com">
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto w-full">
-                <button onclick="runAnalysis()" id="scanBtn" class="bg-blue-600 hover:bg-blue-700 py-5 rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95">
-                    <i data-lucide="shield-search"></i> <span id="txt-scan-btn"></span>
+            <div class="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto w-full">
+                <button onclick="runAnalysis()" id="scanBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 py-5 rounded-xl font-black text-[11px] uppercase flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                    <i data-lucide="shield-search"></i> <span></span>
                 </button>
-                <button onclick="clearInput()" id="txt-clear" class="bg-white/5 border border-white/10 py-5 rounded-xl font-black text-[11px] uppercase text-slate-400 hover:bg-white/10"></button>
+                <button onclick="clearInput()" id="txt-clear" class="px-10 bg-white/5 border border-white/10 py-5 rounded-xl font-black text-[11px] uppercase text-slate-400 hover:bg-white/10"></button>
             </div>
         </section>
 
-        <div id="resultsArea" class="hidden space-y-6 w-full"></div>
+        <div id="resultsArea" class="hidden w-full"></div>
 
         <div id="loader" class="hidden glass p-16 text-center w-full">
             <div class="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6"></div>
-            <p id="loaderStatus" class="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]"></p>
+            <p id="loaderStatus" class="text-blue-500 font-black text-[10px] uppercase tracking-widest"></p>
         </div>
 
-        <footer class="pt-12 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-slate-500 font-bold uppercase pb-8 border-t border-white/5">
+        <footer class="pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] text-slate-500 font-black uppercase border-t border-white/5 pb-10">
             <div class="flex gap-8">
-                <button onclick="openModal('aboutModal')" id="txt-footer-about" class="hover:text-blue-500 transition-colors"></button>
-                <button onclick="openModal('privModal')" id="txt-footer-priv" class="hover:text-red-500 transition-colors"></button>
+                <span id="txt-footer-about" class="cursor-pointer hover:text-blue-500"></span>
+                <span id="txt-footer-priv" class="cursor-pointer hover:text-red-500"></span>
             </div>
             <p id="txt-copyright"></p>
         </footer>
     </main>
 
-    <div id="official-print-template"><div class="paper-border" id="printable-content"></div></div>
-    <div id="scannerModal" class="modal"><div class="glass p-6 w-full max-w-sm mx-4"><div id="reader"></div><button onclick="closeScanner()" id="txt-close-cam" class="w-full mt-6 py-4 bg-red-600/10 text-red-500 font-black text-[10px] uppercase rounded-xl"></button></div></div>
-    <div id="aboutModal" class="modal"><div class="glass p-10 max-w-lg mx-4 space-y-6"><h2 id="txt-m-about-title" class="text-2xl font-black text-blue-500 uppercase italic"></h2><p id="txt-m-about-desc" class="text-slate-300 text-sm leading-relaxed"></p><button onclick="closeModal('aboutModal')" class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase">Back</button></div></div>
-    <div id="privModal" class="modal"><div class="glass p-10 max-w-lg mx-4 space-y-6"><h2 id="txt-m-priv-title" class="text-2xl font-black text-red-500 uppercase italic"></h2><p id="txt-m-priv-desc" class="text-slate-300 text-sm leading-relaxed"></p><button onclick="closeModal('privModal')" class="w-full py-4 bg-white/5 rounded-xl text-[10px] font-black uppercase">Back</button></div></div>
+    <div id="official-print-template"><div id="printable-content"></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -114,33 +144,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const countryDictionary = {
-            "Canada": "كندا", "United States": "الولايات المتحدة", "Egypt": "مصر",
-            "Netherlands": "هولندا", "Germany": "ألمانيا", "France": "فرنسا", "Unknown": "غير معروف"
-        };
+        const countryDictionary = { "Canada": "كندا", "United States": "الولايات المتحدة", "Egypt": "مصر", "Netherlands": "هولندا", "Germany": "ألمانيا" };
 
         const i18n = {
             ar: {
-                hero: "المطور الرئيسي: طارق مصطفى • تحديث 2026",
-                total: "إجمالي الفحوصات", threats: "التهديدات المكتشفة", acc: "دقة التحليل", status: "نشط",
-                inputLabel: "وحدة تحليل النواقل الرقمية", inputSub: "نظام الاستخبارات السيبرانية - طارق مصطفى",
-                btn: "بدء فحص النطاق", clear: "تطهير النواقل", loading: "مزامنة البيانات العالمية...",
-                closeCam: "إغلاق الكاميرا", about: "حول النظام", priv: "الخصوصية", copy: "© 2026 SecuCode Pro • طارق مصطفى",
-                mAboutTitle: "بروتوكول SecuCode Pro", mAboutDesc: "نظام فحص روابط متقدم مطور بواسطة طارق مصطفى لفحص وتأمين الروابط الرقمية.",
-                mPrivTitle: "تشفير البيانات", mPrivDesc: "جميع العمليات مشفرة بالكامل لضمان الخصوصية.",
-                download: "تصدير تقرير PDF رسمي", risk: "معدل الخطورة", ip: "عنوان الخادم", country: "الموقع الجغرافي",
-                safe: "آمن", threat: "تهديد", summary: "1. ملخص التحقيق الجنائي", verdict: "النتيجة النهائية"
+                hero: "المطور الرئيسي: طارق مصطفى • 2026",
+                total: "إجمالي الفحوصات", threats: "التهديدات", acc: "الدقة", status: "نشط",
+                inputLabel: "وحدة تحليل النواقل", inputSub: "نظام الاستخبارات - طارق مصطفى",
+                btn: "بدء الفحص", clear: "تطهير", loading: "جاري تحليل البيانات...",
+                about: "بروتوكول النظام", priv: "الخصوصية", copy: "© 2026 SecuCode Pro • طارق مصطفى",
+                download: "تصدير التقرير PDF", risk: "الخطورة", ip: "الخادم", country: "الموقع"
             },
             en: {
-                hero: "Lead Dev: Tarek Mostafa • 2026 Intel",
-                total: "TOTAL SCANS", threats: "THREATS BLOCKED", acc: "ACCURACY", status: "ACTIVE",
-                inputLabel: "DIGITAL VECTOR ANALYSIS", inputSub: "CYBER INTEL CORE - TAREK MOSTAFA",
-                btn: "SCAN DOMAIN NOW", clear: "PURGE", loading: "Syncing global intelligence...",
-                closeCam: "Close Camera", about: "PROTOCOL", priv: "PRIVACY", copy: "© 2026 SecuCode Pro • Tarek Mostafa",
-                mAboutTitle: "SecuCode Pro Protocol", mAboutDesc: "Advanced forensic link verification system developed by Tarek Mostafa.",
-                mPrivTitle: "Encryption", mPrivDesc: "All scans are end-to-end encrypted.",
-                download: "Export Official PDF", risk: "Risk Score", ip: "Server IP", country: "Location",
-                safe: "SAFE", threat: "THREAT", summary: "1. Investigation Summary", verdict: "Final Verdict"
+                hero: "Lead Dev: Tarek Mostafa • 2026",
+                total: "TOTAL SCANS", threats: "THREATS", acc: "ACCURACY", status: "ACTIVE",
+                inputLabel: "VECTOR ANALYSIS", inputSub: "INTEL CORE - TAREK MOSTAFA",
+                btn: "SCAN NOW", clear: "PURGE", loading: "Analyzing intelligence...",
+                about: "PROTOCOL", priv: "PRIVACY", copy: "© 2026 SecuCode Pro",
+                download: "Export PDF Report", risk: "Risk Score", ip: "IP", country: "Location"
             }
         };
 
@@ -149,32 +170,37 @@
 
         window.toggleLang = () => {
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            const isAr = currentLang === 'ar';
+            document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLang;
+            
+            document.getElementById('langBtn').innerText = isAr ? 'English' : 'العربية';
+            
             const d = i18n[currentLang];
-            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-            document.getElementById('langBtn').innerText = currentLang === 'ar' ? 'English' : 'العربية';
             document.querySelectorAll('[id^="txt-"]').forEach(el => {
                 const key = el.id.replace('txt-', '').replace(/-([a-z])/g, g => g[1].toUpperCase());
                 if(d[key]) el.innerText = d[key];
             });
             document.getElementById('scanBtn').querySelector('span').innerText = d.btn;
             document.getElementById('loaderStatus').innerText = d.loading;
+            
             if(lastResult) renderResults(lastResult.data, lastResult.url);
             lucide.createIcons();
         };
 
+        // تشغيل اللغة الافتراضية عند التحميل
         window.toggleLang();
 
         window.runAnalysis = async function() {
-            const input = document.getElementById('urlInput');
-            let url = input.value.trim();
+            const url = document.getElementById('urlInput').value.trim();
             if(!url) return;
             document.getElementById('resultsArea').classList.add('hidden');
             document.getElementById('loader').classList.remove('hidden');
             try {
-                const res = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ link: url })
+                const res = await fetch('/analyze', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ link: url }) 
                 });
                 const data = await res.json();
                 lastResult = { data, url };
@@ -186,63 +212,51 @@
         function renderResults(data, url) {
             const area = document.getElementById('resultsArea');
             const d = i18n[currentLang];
-            const isCrit = data.is_blacklisted;
-            const themeColor = isCrit ? '#ef4444' : '#10b981';
-            const countryDisplay = currentLang === 'ar' ? (countryDictionary[data.server.country] || data.server.country) : data.server.country;
+            const country = currentLang === 'ar' ? (countryDictionary[data.server.country] || data.server.country) : data.server.country;
+            const themeColor = data.is_blacklisted ? '#ef4444' : '#10b981';
 
             area.classList.remove('hidden');
             area.innerHTML = `
-                <div class="glass p-6 md:p-10 border-l-4 shadow-2xl" style="border-color: ${themeColor}">
+                <div class="glass p-8 border-l-4 shadow-2xl" style="border-color: ${themeColor}">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="text-center md:text-right">
-                            <h3 class="text-2xl font-black uppercase" style="color: ${themeColor}">${isCrit ? d.threat : d.safe}</h3>
-                            <p class="text-slate-400 font-mono text-xs mt-2 break-all">${url}</p>
+                            <h3 class="text-3xl font-black uppercase" style="color: ${themeColor}">${data.is_blacklisted ? 'Threat Detected' : 'Verified Safe'}</h3>
+                            <p class="text-slate-500 font-mono text-xs mt-1">${url}</p>
                         </div>
-                        <button onclick="downloadOfficialReport()" class="bg-blue-600 px-8 py-4 rounded-xl font-black text-[10px] uppercase flex items-center gap-2">
-                            <i data-lucide="printer"></i> ${d.download}
-                        </button>
+                        <button onclick="downloadOfficialReport()" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-blue-900/20">${d.download}</button>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
                         <div class="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
-                            <p class="text-[10px] text-slate-500 font-black mb-1 uppercase">${d.risk}</p>
-                            <span class="text-3xl font-black font-mono" style="color: ${themeColor}">${data.risk_score}%</span>
+                            <p class="text-[9px] text-slate-500 uppercase font-black mb-1">${d.risk}</p>
+                            <span class="text-2xl font-black font-mono" style="color: ${themeColor}">${data.risk_score}%</span>
                         </div>
                         <div class="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
-                            <p class="text-[10px] text-slate-500 font-black mb-1 uppercase">${d.ip}</p>
-                            <span class="text-lg font-black font-mono break-all">${data.server.ip}</span>
+                            <p class="text-[9px] text-slate-500 uppercase font-black mb-1">${d.ip}</p>
+                            <span class="text-lg font-black font-mono">${data.server.ip}</span>
                         </div>
                         <div class="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
-                            <p class="text-[10px] text-slate-500 font-black mb-1 uppercase">${d.country}</p>
-                            <span class="text-lg font-black">${countryDisplay}</span>
+                            <p class="text-[9px] text-slate-500 uppercase font-black mb-1">${d.country}</p>
+                            <span class="text-lg font-black">${country}</span>
                         </div>
                     </div>
                 </div>
             `;
-
+            
+            // تحديث قالب الـ PDF
             const isRTL = currentLang === 'ar';
             document.getElementById('printable-content').innerHTML = `
-                <div class="watermark uppercase">Certified by Tarek</div>
-                <div style="display:flex; justify-content:space-between; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:30px; direction:ltr">
-                    <div style="text-align:left;">
-                        <h1 style="font-size:24pt; font-weight:900; margin:0; color:#000;">SECUCODE <span style="color:#2563eb;">PRO</span></h1>
-                        <p style="font-size:8pt; letter-spacing:3px; font-weight:bold; color:#666; margin:0;">CYBER FORENSIC REPORT</p>
+                <div style="direction:${isRTL?'rtl':'ltr'}; text-align:${isRTL?'right':'left'}; font-family: 'Cairo', sans-serif; color: #000; padding: 20px; border: 2px solid #000;">
+                    <h1 style="font-size: 24pt; border-bottom: 2px solid #000; padding-bottom: 10px;">SECUCODE PRO FORENSIC REPORT</h1>
+                    <div style="margin: 20px 0; font-size: 14pt;">
+                        <p><strong>URL:</strong> ${url}</p>
+                        <p><strong>${d.risk}:</strong> ${data.risk_score}%</p>
+                        <p><strong>${d.country}:</strong> ${country}</p>
+                        <p><strong>${d.ip}:</strong> ${data.server.ip}</p>
+                        <p><strong>STATUS:</strong> ${data.is_blacklisted ? 'MALICIOUS' : 'CLEAN'}</p>
                     </div>
-                    <div style="text-align:right; font-family:monospace; font-size:9pt; color:#000;">REF: SC-${Date.now()}<br>DATE: ${data.timestamp}</div>
-                </div>
-                <div style="direction:${isRTL?'rtl':'ltr'}; text-align:${isRTL?'right':'left'}">
-                    <h2 style="font-size:14pt; border-${isRTL?'right':'left'}:5px solid #000; padding-${isRTL?'right':'left'}:10px;">${d.summary}</h2>
-                    <table style="width:100%; border-collapse:collapse; margin:20px 0; font-size:11pt; color:#000;">
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">URL</td><td style="padding:10px; direction:ltr;">${url}</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${d.risk}</td><td style="padding:10px; color:${themeColor}; font-weight:900;">${data.risk_score}%</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${d.country}</td><td style="padding:10px;">${countryDisplay}</td></tr>
-                    </table>
-                    <h2 style="font-size:14pt; border-${isRTL?'right':'left'}:5px solid #000; padding-${isRTL?'right':'left'}:10px;">${d.verdict}</h2>
-                    <div style="padding:20px; border:2px solid #000; text-align:center; margin:20px 0; font-size:24pt; font-weight:900; color:${themeColor}">${isCrit ? d.threat : d.safe}</div>
-                    <div style="border:1px solid #ccc; text-align:center; background:#fff;"><img src="${data.screenshot}" style="max-width:100%;"></div>
-                </div>
-                <div style="margin-top:50px; display:flex; justify-content:space-between; align-items:flex-end; direction:ltr">
-                    <div style="border:3px double #2563eb; color:#2563eb; padding:10px; font-weight:900; transform:rotate(-15deg);">FORENSIC UNIT</div>
-                    <div style="text-align:right; color:#000;"><p style="font-weight:900; margin:0;">Tarek Mostafa</p><div style="height:2px; width:150px; background:#000;"></div><p style="font-size:8pt; color:#666;">LEAD ANALYST</p></div>
+                    <div style="margin-top: 20px; text-align: center;">
+                        <img src="${data.screenshot}" style="max-width: 100%; border: 1px solid #ddd;">
+                    </div>
                 </div>
             `;
             lucide.createIcons();
@@ -251,28 +265,15 @@
 
         window.downloadOfficialReport = async function() {
             const el = document.getElementById('official-print-template');
-            el.style.left = "0"; 
-            const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            el.style.left = "0";
+            const canvas = await html2canvas(el, { scale: 2 });
+            const pdf = new jspdf.jsPDF();
             pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
             pdf.save(`Forensic_Report_${Date.now()}.pdf`);
-            el.style.left = "-9999px"; 
+            el.style.left = "-9999px";
         };
 
-        window.openScanner = () => {
-            document.getElementById('scannerModal').classList.add('active');
-            let qr = new Html5Qrcode("reader");
-            qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-                document.getElementById('urlInput').value = txt;
-                qr.stop(); document.getElementById('scannerModal').classList.remove('active');
-                runAnalysis();
-            }).catch(() => {});
-        };
-
-        window.closeScanner = () => document.getElementById('scannerModal').classList.remove('active');
         window.clearInput = () => document.getElementById('urlInput').value = '';
-        window.openModal = (id) => document.getElementById(id).classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
 
         onValue(ref(db, 'stats'), (s) => {
             const v = s.val() || { clicks: 0, threats: 0 };
