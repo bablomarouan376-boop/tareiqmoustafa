@@ -15,17 +15,7 @@
 
     <style>
         :root { --accent-blue: #3b82f6; --accent-red: #ef4444; --accent-green: #10b981; }
-        /* سنترة الموقع بالكامل لضمان عدم حدوث إزاحة */
-        body { 
-            font-family: 'Cairo', 'Inter', sans-serif; 
-            background: #020617; 
-            color: white; 
-            min-height: 100vh; 
-            overflow-x: hidden; 
-            display: flex; 
-            justify-content: center; 
-        }
-        .main-wrapper { width: 100%; max-width: 1200px; padding: 1rem; }
+        body { font-family: 'Cairo', 'Inter', sans-serif; background: #020617; color: white; min-height: 100vh; overflow-x: hidden; }
         .cyber-grid { background-image: radial-gradient(circle, rgba(59, 130, 246, 0.05) 1px, transparent 1px); background-size: 30px 30px; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
         .modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
@@ -38,7 +28,7 @@
         #toast.active { transform: translateX(0); }
     </style>
 </head>
-<body class="cyber-grid">
+<body class="cyber-grid p-4 md:p-8">
 
     <div id="toast" class="glass px-6 py-4 flex items-center gap-4 border-l-4 border-l-blue-500 min-w-[300px]">
         <div id="toast-icon"></div>
@@ -48,7 +38,7 @@
         </div>
     </div>
 
-    <main class="main-wrapper space-y-6">
+    <main class="max-w-6xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row justify-between items-center gap-6 glass p-6 border-b border-blue-500/20 shadow-2xl">
             <div class="flex items-center gap-5">
                 <div class="p-1 bg-blue-600/10 rounded-xl border border-blue-500/20">
@@ -76,7 +66,7 @@
                     <p id="txt-input-sub" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"></p>
                 </div>
                 <div class="relative group">
-                    <input type="text" id="urlInput" dir="ltr" class="w-full bg-black/40 border border-white/10 p-6 pr-20 rounded-2xl focus:border-blue-600 transition-all font-mono text-center md:text-left outline-none text-base" placeholder="example-domain.com">
+                    <input type="text" id="urlInput" class="w-full bg-black/40 border border-white/10 p-6 pr-20 rounded-2xl focus:border-blue-600 transition-all font-mono text-left outline-none text-base" placeholder="example-domain.com">
                     <button onclick="openScanner()" class="absolute right-3 top-1/2 -translate-y-1/2 p-4 bg-blue-600/10 border border-blue-500/20 rounded-xl hover:bg-blue-600/20 transition-all">
                         <i data-lucide="qr-code" class="w-6 h-6 text-blue-400"></i>
                     </button>
@@ -118,9 +108,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // إضافة قاموس ترجمة الدول
-        const arCountries = { "Egypt": "جمهورية مصر العربية", "United States": "الولايات المتحدة", "Netherlands": "هولندا", "Germany": "ألمانيا", "Canada": "كندا" };
-
         const i18n = {
             ar: {
                 hero: "المطور الرئيسي: طارق مصطفى • تحديث 2026",
@@ -135,7 +122,7 @@
                 mPrivDesc: "عمليات الفحص مشفرة بالكامل. نحن نؤمن بأن الخصوصية حق إنساني أساسي.",
                 risk: "معامل الخطورة", mode: "محرك التحليل", resSafe: "نطاق موثوق", resCrit: "تهديد سيبراني",
                 OFFICIAL: "نطاق رسمي موثوق.", MALICIOUS: "خطر: تهديد أو تجسس مكتشف.", CLEAN: "نطاق سليم تقنياً.",
-                download: "تصدير تقرير PDF", ip: "عنوان الخادم", country: "الموقع الجغرافي",
+                download: "تصدير تقرير PDF", watermark: "طارق مصطفى",
                 alertSafe: "نطاق آمن", alertDanger: "تحذير أمني", msgSafe: "تم التحقق من سلامة الرابط.", msgDanger: "تم رصد نشاط مشبوه أو تجسس!"
             },
             en: {
@@ -151,7 +138,7 @@
                 mPrivDesc: "All scans are end-to-end encrypted. We prioritize your privacy.",
                 risk: "RISK FACTOR", mode: "ENGINE", resSafe: "TRUSTED DOMAIN", resCrit: "CYBER THREAT",
                 OFFICIAL: "Official Trusted Domain.", MALICIOUS: "Danger: Malicious or Spyware detected.", CLEAN: "Technically clean domain.",
-                download: "Export PDF Report", ip: "Server IP", country: "Location",
+                download: "Export PDF Report", watermark: "Tarek Mostafa",
                 alertSafe: "Safe Domain", alertDanger: "Security Alert", msgSafe: "Link verified and safe.", msgDanger: "Suspicious activity or spyware detected!"
             }
         };
@@ -204,12 +191,20 @@
             const input = document.getElementById('urlInput');
             let url = input.value.trim();
             if(!url) return;
+            
             document.getElementById('resultsArea').classList.add('hidden');
             document.getElementById('loader').classList.remove('hidden');
+
             try {
-                const response = await fetch('/analyze', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ link: url }) });
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ link: url })
+                });
                 const result = await response.json();
+                
                 renderResults(result, url);
+                
                 const d = i18n[currentLang];
                 if(result.is_blacklisted) showToast('danger', d.alertDanger, d.msgDanger);
                 else showToast('safe', d.alertSafe, d.msgSafe);
@@ -227,18 +222,16 @@
             const isCrit = data.is_blacklisted;
             const isSafe = data.is_official;
             const theme = isCrit ? 'var(--accent-red)' : (isSafe ? 'var(--accent-green)' : 'var(--accent-blue)');
-            const countryDisplay = currentLang === 'ar' ? (arCountries[data.server.country] || data.server.country) : data.server.country;
-
+            
             area.innerHTML = `
                 <div id="captureArea" class="glass p-8 md:p-12 ${isCrit ? 'glow-red' : (isSafe ? 'glow-green' : '')}" style="border-top: 4px solid ${theme}">
                     <div class="grid lg:grid-cols-5 gap-8">
                         <div class="lg:col-span-3 space-y-6">
                             <h2 class="text-3xl font-black italic uppercase" style="color: ${theme}">${isCrit ? d.resCrit : d.resSafe}</h2>
                             <div class="bg-black/40 p-6 rounded-2xl border-r-8" style="border-color: ${theme}"><p class="text-white text-lg font-bold">${isSafe ? d.OFFICIAL : (isCrit ? d.MALICIOUS : d.CLEAN)}</p></div>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div class="glass p-4 text-center"><span class="block text-[9px] mb-1 text-slate-500 uppercase">${d.risk}</span><span class="text-2xl font-black" style="color: ${theme}">${data.risk_score}%</span></div>
-                                <div class="glass p-4 text-center"><span class="block text-[9px] mb-1 text-slate-500 uppercase">${d.ip}</span><span class="text-[11px] font-black font-mono">${data.server.ip}</span></div>
-                                <div class="glass p-4 text-center md:col-span-1 col-span-2"><span class="block text-[9px] mb-1 text-slate-500 uppercase">${d.country}</span><span class="text-[11px] font-black">${countryDisplay}</span></div>
+                                <div class="glass p-4 text-center"><span class="block text-[9px] mb-1 text-slate-500 uppercase">${d.mode}</span><span class="text-[10px] font-black text-blue-500 uppercase">FORENSIC_V2</span></div>
                             </div>
                             <button onclick="downloadPDF()" class="w-full py-4 glass border-white/10 text-[10px] font-black uppercase hover:bg-blue-600/10 transition-all flex items-center justify-center gap-2">
                                 <i data-lucide="file-text" class="w-4 h-4"></i> ${d.download}
@@ -252,6 +245,7 @@
                         </div>
                     </div>
                 </div>`;
+            
             lucide.createIcons();
             area.scrollIntoView({ behavior: 'smooth' });
         }
