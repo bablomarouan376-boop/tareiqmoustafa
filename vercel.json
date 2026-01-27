@@ -7,25 +7,9 @@
     }
   ],
   "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/generate_report",
-      "dest": "app.py",
-      "headers": {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": "attachment; filename=SecuCode_Report.pdf"
-      }
-    },
-    {
-      "src": "/analyze",
-      "dest": "app.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
-    }
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/generate_report", "dest": "app.py" },
+    { "src": "/analyze", "dest": "app.py" },
+    { "src": "/(.*)", "dest": "app.py" }
   ]
 }
