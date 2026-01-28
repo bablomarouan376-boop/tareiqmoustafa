@@ -194,7 +194,7 @@
                             <div class="bg-black/40 p-6 rounded-2xl border-r-8" style="border-color: ${theme}">
                                 <p class="text-white text-lg font-bold">${data.is_blacklisted ? 'Malicious Detected' : 'Official/Safe Domain'}</p>
                             </div>
-                            <button onclick="downloadPDF()" class="w-full py-4 glass text-[10px] font-black uppercase hover:bg-blue-600/10 flex items-center justify-center gap-2">
+                            <button id="downBtn" onclick="downloadPDF()" class="w-full py-4 glass text-[10px] font-black uppercase hover:bg-blue-600/10 flex items-center justify-center gap-2">
                                 <i data-lucide="file-text" class="w-4 h-4"></i> ${d.download}
                             </button>
                         </div>
@@ -210,9 +210,15 @@
             area.scrollIntoView({behavior: 'smooth'});
         }
 
-        // الحل الجذري والنهائي للتحميل
+        // الحل الجذري والنهائي باستخدام Cloudinary لضمان صيغة PDF
         window.downloadPDF = async function() {
             if(!lastScanResult) return;
+            const btn = document.getElementById('downBtn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<span class="animate-spin mr-2">/</span> UPLOADING TO CLOUD...`;
+            btn.disabled = true;
+
             try {
                 const response = await fetch('/generate_report', {
                     method: 'POST',
@@ -220,25 +226,20 @@
                     body: JSON.stringify({ result: lastScanResult, lang: currentLang })
                 });
 
-                if(!response.ok) throw new Error();
+                const data = await response.json();
 
-                // استقبال الملف كـ Blob
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                // إجبار المتصفح على تسمية الملف بـ .pdf
-                a.download = `Audit_Report_${Date.now()}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                }, 1000);
+                if(data.pdf_url) {
+                    // التوجه المباشر لرابط الـ PDF من Cloudinary
+                    window.location.href = data.pdf_url;
+                } else {
+                    throw new Error();
+                }
             } catch (e) {
-                alert("Download Failed");
+                showToast('danger', 'Error', 'Download Failed');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
             }
         };
 
