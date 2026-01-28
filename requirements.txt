@@ -4,3 +4,4 @@ firebase-admin
 python-dotenv
 xhtml2pdf
 gunicorn
+cloudinary
