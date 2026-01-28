@@ -1,118 +1,96 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<html dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <style>
-        @page {
-            size: a4;
-            margin: 1.5cm;
-            @bottom-right {
-                content: "Page " counter(page) " of " counter(pages);
-                font-size: 9pt;
-            }
-        }
-        body {
-            font-family: Helvetica, Arial, sans-serif;
-            color: #1e293b;
-            line-height: 1.6;
-        }
-        .header {
-            border-bottom: 3px solid #3b82f6;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        .logo {
-            font-size: 26pt;
-            font-weight: bold;
-            color: #0f172a;
-        }
-        .status-banner {
-            padding: 20pt;
-            border-radius: 10pt;
-            text-align: center;
-            margin-bottom: 25pt;
-        }
-        .danger {
-            background-color: #fef2f2;
-            border: 1pt solid #ef4444;
-            color: #991b1b;
-        }
-        .safe {
-            background-color: #f0fdf4;
-            border: 1pt solid #22c55e;
-            color: #166534;
-        }
-        .section-title {
-            background: #f8fafc;
-            padding: 8pt;
-            font-weight: bold;
-            border-left: 5pt solid #3b82f6;
-            margin-top: 20pt;
-            font-size: 12pt;
-        }
-        table {
-            width: 100%;
-            margin-top: 10pt;
-            border-collapse: collapse;
-        }
-        td {
-            padding: 10pt;
-            border-bottom: 0.5pt solid #e2e8f0;
-            font-size: 10pt;
-        }
-        .footer {
-            text-align: center;
-            font-size: 8pt;
-            color: #94a3b8;
-            margin-top: 50pt;
-            border-top: 0.5pt solid #e2e8f0;
-            padding-top: 10pt;
-        }
+        @page { size: A4; margin: 0mm; }
+        body { font-family: 'Arial', sans-serif; background-color: #020617; color: #ffffff; margin: 0; padding: 0; }
+        .container { padding: 40px; }
+        
+        /* الهيدر */
+        .header { background-color: #0f172a; padding: 30px; border-bottom: 4px solid #3b82f6; text-align: center; }
+        .logo-text { color: #3b82f6; font-size: 28px; font-weight: bold; text-transform: uppercase; }
+        .sub-logo { color: #64748b; font-size: 10px; letter-spacing: 2px; margin-top: 5px; }
+
+        /* حالة النطاق */
+        .status-box { margin-top: 25px; padding: 20px; border-radius: 12px; text-align: center; background-color: #1e293b; }
+        .safe { border: 2px solid #10b981; color: #10b981; }
+        .danger { border: 2px solid #ef4444; color: #ef4444; }
+
+        /* العناوين والجداول */
+        .section-title { color: #3b82f6; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 5px; margin-top: 25px; text-transform: uppercase; font-weight: bold; }
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        td { padding: 10px; border-bottom: 1px solid #1e293b; font-size: 11px; }
+        .label { color: #94a3b8; width: 35%; }
+        .value { color: #f1f5f9; font-weight: bold; }
+
+        /* قسم التوصيات الجديد */
+        .recomm-container { margin-top: 25px; padding: 15px; background: rgba(59, 130, 246, 0.05); border-radius: 10px; border: 1px dashed #3b82f6; }
+        .recomm-item { margin-bottom: 8px; font-size: 10px; color: #cbd5e1; display: block; }
+        .recomm-icon { color: #3b82f6; margin-left: 5px; margin-right: 5px; font-weight: bold; }
+
+        /* الصورة */
+        .screenshot-container { margin-top: 20px; text-align: center; }
+        .screenshot-img { width: 75%; border: 4px solid #1e293b; border-radius: 8px; }
+
+        .footer { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 8px; color: #475569; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <span style="float: right; color: #ef4444; font-size: 9pt; font-weight: bold;">CLASSIFIED: SECURITY AUDIT</span>
-        <div class="logo">SecuCode <span style="color:#3b82f6">Pro</span></div>
+        <div class="logo-text">SecuCode Pro</div>
+        <div class="sub-logo">Advanced Forensic Intel Report</div>
     </div>
 
-    <div class="status-banner {{ 'danger' if data.is_blacklisted else 'safe' }}">
-        <h1 style="margin:0;">{{ 'THREAT ANALYSIS: CRITICAL' if data.is_blacklisted else 'THREAT ANALYSIS: SECURE' }}</h1>
-        <p style="font-size: 14pt;">Confidence Score: {{ 100 - data.risk_score }}% | Risk Score: {{ data.risk_score }}%</p>
+    <div class="container">
+        
+        <div class="status-box {{ 'danger' if data.is_blacklisted else 'safe' }}">
+            <h1 style="margin:0; font-size: 22px;">
+                {{ 'تنبيه: تهديد سيبراني مكتشف' if lang == 'ar' and data.is_blacklisted else 'نطاق آمن وموثوق' if lang == 'ar' else 'CRITICAL THREAT DETECTED' if data.is_blacklisted else 'VERIFIED SAFE DOMAIN' }}
+            </h1>
+            <p style="font-size: 11px; margin-top: 5px; opacity: 0.8;">Forensic Trust Score: {{ 100 - data.risk_score }}%</p>
+        </div>
+
+        <div class="section-title">{{ 'بيانات التحليل' if lang == 'ar' else 'ANALYSIS METRICS' }}</div>
+        <table>
+            <tr>
+                <td class="label">{{ 'النطاق المستهدف' if lang == 'ar' else 'Target Domain' }}</td>
+                <td class="value">{{ data.url }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ 'عنوان البروتوكول (IP)' if lang == 'ar' else 'Protocol IP' }}</td>
+                <td class="value">{{ data.server.ip }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ 'موقع الخادم' if lang == 'ar' else 'Server Location' }}</td>
+                <td class="value">{{ data.server.country }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">{{ 'توصيات أمنية' if lang == 'ar' else 'SECURITY RECOMMENDATIONS' }}</div>
+        <div class="recomm-container">
+            {% if data.is_blacklisted %}
+                <span class="recomm-item"><span class="recomm-icon">!</span> {{ 'قم بحظر هذا النطاق فوراً من جدار الحماية الخاص بك.' if lang == 'ar' else 'Immediately block this domain on your local firewall.' }}</span>
+                <span class="recomm-item"><span class="recomm-icon">!</span> {{ 'لا تقم بإدخال أي بيانات حساسة أو كلمات مرور في هذا الموقع.' if lang == 'ar' else 'Avoid entering any sensitive credentials or personal data.' }}</span>
+                <span class="recomm-item"><span class="recomm-icon">!</span> {{ 'تحقق من وجود شهادات SSL مزورة أو منتهية الصلاحية.' if lang == 'ar' else 'Inspect for forged or expired SSL certificates.' }}</span>
+            {% else %}
+                <span class="recomm-item"><span class="recomm-icon">✓</span> {{ 'النطاق يبدو سليماً، ولكن تأكد دائماً من وجود قفل التشفير (HTTPS).' if lang == 'ar' else 'Domain appears safe. Always verify the HTTPS padlock icon.' }}</span>
+                <span class="recomm-item"><span class="recomm-icon">✓</span> {{ 'هذا الموقع لا يظهر في أي قوائم سوداء عالمية حالياً.' if lang == 'ar' else 'This URL is not currently listed in global blacklists.' }}</span>
+                <span class="recomm-item"><span class="recomm-icon">✓</span> {{ 'استخدم بروتوكول DNS آمن لزيادة الحماية أثناء التصفح.' if lang == 'ar' else 'Use secure DNS protocols to enhance browsing privacy.' }}</span>
+            {% endif %}
+        </div>
+
+        <div class="section-title">{{ 'المعاينة الرقمية' if lang == 'ar' else 'DIGITAL PREVIEW' }}</div>
+        <div class="screenshot-container">
+            <img src="{{ data.screenshot }}" class="screenshot-img">
+        </div>
+
     </div>
-
-    <div class="section-title">Forensic Identification</div>
-    <table>
-        <tr>
-            <td><strong>Target Host/IP</strong></td>
-            <td>{{ data.server.ip }}</td>
-        </tr>
-        <tr>
-            <td><strong>Geographic Origin</strong></td>
-            <td>{{ data.server.country }}</td>
-        </tr>
-        <tr>
-            <td><strong>Organization</strong></td>
-            <td>{{ data.server.org }}</td>
-        </tr>
-        <tr>
-            <td><strong>Timestamp</strong></td>
-            <td>{{ data.timestamp }}</td>
-        </tr>
-    </table>
-
-    <div class="section-title">Deep Analysis Findings</div>
-    <p style="font-size: 11pt;">
-        {% if data.is_blacklisted %}
-        The automated forensic engine has identified high-risk indicators. This domain is currently flagged in global threat intelligence databases (VirusTotal/Cyber-Intel). Access is <strong>Strictly Restricted</strong>.
-        {% else %}
-        The domain has passed all security heuristic checks. No malicious signatures were found. The connection to this host is considered <strong>Verified and Safe</strong>.
-        {% endif %}
-    </p>
 
     <div class="footer">
-        SecuCode Pro Forensic System - Intel Core i7-vPro Optimized <br>
-        Lead Developer: Tarek Mostafa - 2026 Audit Report
+        © 2026 SecuCode Pro • Security Protocol by Tarek Mostafa • Verified Report ID: {{ range(1000, 9999) | random }}
     </div>
+
 </body>
 </html>
